@@ -1,0 +1,32 @@
+name: "Health Claims Rules"
+version: "1.0.0"
+description: "Rules for detecting problematic health claims"
+
+rules:
+  - id: "ABSOLUTE_HEALTH_CLAIM"
+    type: "claim"
+    severity: "critical"
+    message: "Absolute health claim detected - requires medical disclaimer"
+    patterns:
+      - "cures"
+      - "treats"
+      - "heals"
+      - "prevents"
+      - "guaranteed to"
+      - "100% effective"
+      - "miracle"
+      - "breakthrough"
+    category: "Health"
+    requires_disclaimer: true
+    
+  - id: "BEFORE_AFTER_CLAIM"
+    type: "claim"
+    severity: "high"
+    message: "Before/after claim requires results not typical disclaimer"
+    patterns:
+      - "before and after"
+      - "transformation"
+      - "amazing results"
+      - "instant results"
+    category: "Health"
+    requires_disclaimer: true

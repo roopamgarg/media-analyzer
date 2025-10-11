@@ -1,0 +1,31 @@
+name: "Financial Claims Rules"
+version: "1.0.0"
+description: "Rules for detecting problematic financial claims"
+
+rules:
+  - id: "FINANCIAL_RETURN_PROMISE"
+    type: "claim"
+    severity: "critical"
+    message: "Financial return promise requires risk disclaimer"
+    patterns:
+      - "guaranteed returns"
+      - "no risk"
+      - "risk-free"
+      - "guaranteed profit"
+      - "get rich quick"
+      - "easy money"
+    category: "Finance"
+    requires_disclaimer: true
+    
+  - id: "INVESTMENT_ADVICE"
+    type: "claim"
+    severity: "high"
+    message: "Investment advice requires professional disclaimer"
+    patterns:
+      - "buy now"
+      - "sell now"
+      - "invest in"
+      - "stock tip"
+      - "trading advice"
+    category: "Finance"
+    requires_disclaimer: true

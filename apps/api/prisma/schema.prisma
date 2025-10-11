@@ -1,0 +1,77 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Project {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  analyses  Analysis[]
+  brandKits BrandKit[]
+
+  @@map("projects")
+}
+
+model BrandKit {
+  id        String   @id @default(cuid())
+  projectId String
+  name      String
+  data      Json     // InlineBrandKit data
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  project   Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  analyses  Analysis[]
+
+  @@map("brand_kits")
+}
+
+model Analysis {
+  id          String   @id @default(cuid())
+  projectId   String
+  brandKitId  String?
+  postId      String?  // External post ID if applicable
+  status      String   // queued, processing, completed, failed
+  progress    Int?     // 0-100
+  error       String?
+  
+  // Results
+  scores      Json?    // Risk and vibe scores
+  flags       Json?    // Array of flags
+  evidence    Json?    // Evidence data
+  artifacts   Json?    // PDF URLs, etc.
+  timings     Json?    // Performance timings
+  ruleset     String   // Version of rules used
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  completedAt DateTime?
+
+  // Relations
+  project  Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  brandKit BrandKit? @relation(fields: [brandKitId], references: [id])
+
+  @@map("analyses")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}

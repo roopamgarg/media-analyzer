@@ -1,0 +1,41 @@
+name: "Brand Safety Rules"
+version: "1.0.0"
+description: "Rules for detecting brand safety issues"
+
+rules:
+  - id: "PROFANITY_DETECTED"
+    type: "brand_safety"
+    severity: "high"
+    message: "Profanity detected in content"
+    patterns:
+      - "damn"
+      - "hell"
+      - "crap"
+      - "sucks"
+    category: "Safety"
+    
+  - id: "POLITICAL_CONTENT"
+    type: "brand_safety"
+    severity: "medium"
+    message: "Political content detected"
+    patterns:
+      - "trump"
+      - "biden"
+      - "election"
+      - "vote"
+      - "democrat"
+      - "republican"
+    category: "Safety"
+    
+  - id: "RELIGIOUS_CONTENT"
+    type: "brand_safety"
+    severity: "low"
+    message: "Religious content detected"
+    patterns:
+      - "god"
+      - "jesus"
+      - "christ"
+      - "buddha"
+      - "allah"
+      - "prayer"
+    category: "Safety"

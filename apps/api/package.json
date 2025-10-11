@@ -1,0 +1,51 @@
+{
+  "name": "@media-analyzer/api",
+  "version": "1.0.0",
+  "description": "Fastify API server for media analysis",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "test": "jest",
+    "lint": "eslint src --ext .ts",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@media-analyzer/contracts": "file:../../packages/contracts",
+    "@media-analyzer/lib-node": "file:../../packages/lib-node",
+    "@media-analyzer/rules": "file:../../packages/rules",
+    "fastify": "^4.24.3",
+    "@fastify/cors": "^8.4.0",
+    "@fastify/helmet": "^11.1.1",
+    "@fastify/rate-limit": "^8.0.2",
+    "@fastify/jwt": "^7.2.4",
+    "@fastify/multipart": "^8.0.0",
+    "fastify-plugin": "^4.5.1",
+    "bullmq": "^4.15.4",
+    "ioredis": "^5.3.2",
+    "prisma": "^5.6.0",
+    "@prisma/client": "^5.6.0",
+    "fluent-ffmpeg": "^2.1.2",
+    "axios": "^1.6.0",
+    "form-data": "^4.0.0",
+    "pino": "^8.16.2",
+    "pino-pretty": "^10.2.3",
+    "zod": "^3.22.4",
+    "nanoid": "^5.0.4",
+    "sharp": "^0.32.6",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.8.0",
+    "@types/fluent-ffmpeg": "^2.1.24",
+    "typescript": "^5.2.2",
+    "tsx": "^4.1.4",
+    "jest": "^29.7.0",
+    "@types/jest": "^29.5.8",
+    "ts-jest": "^29.1.1",
+    "eslint": "^8.52.0",
+    "@typescript-eslint/eslint-plugin": "^6.9.1",
+    "@typescript-eslint/parser": "^6.9.1"
+  }
+}

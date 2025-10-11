@@ -1,0 +1,28 @@
+name: "Disclosure Rules"
+version: "1.0.0"
+description: "Rules for detecting proper disclosure requirements"
+
+rules:
+  - id: "DISCLOSURE_MISSING_OR_DELAYED"
+    type: "disclosure"
+    severity: "high"
+    message: "No #ad/#sponsored disclosure found in first 125 characters"
+    patterns:
+      - "#ad"
+      - "#sponsored"
+      - "#partnership"
+      - "#collab"
+      - "sponsored by"
+      - "paid partnership"
+    position_threshold: 125
+    required: true
+    
+  - id: "DISCLOSURE_TOO_LATE"
+    type: "disclosure"
+    severity: "medium"
+    message: "Disclosure appears after first 125 characters"
+    patterns:
+      - "#ad"
+      - "#sponsored"
+    position_threshold: 125
+    required: true
