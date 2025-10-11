@@ -43,7 +43,7 @@ export function extractReelId(url: string): string | null {
  * 3. Rate limiting and error handling
  * 4. Legal compliance with Instagram's ToS
  */
-export async function downloadInstagramReel(reelUrl: string): Promise<{
+export async function downloadInstagramReel(reelUrl: string, browserCookies?: string, cookiesFile?: string): Promise<{
   videoPath: string;
   caption?: string;
   metadata: InstagramReelInfo;
@@ -70,7 +70,7 @@ export async function downloadInstagramReel(reelUrl: string): Promise<{
     const reelInfo = await fetchReelInfo(reelId);
     
     // Download the actual video file using Python worker
-    await downloadInstagramVideo(reelUrl, videoPath);
+    await downloadInstagramVideo(reelUrl, videoPath, browserCookies, cookiesFile);
     
     return {
       videoPath,
@@ -111,7 +111,7 @@ async function fetchReelInfo(reelId: string): Promise<InstagramReelInfo> {
 /**
  * Download Instagram Reel video using Python worker
  */
-async function downloadInstagramVideo(reelUrl: string, outputPath: string): Promise<void> {
+async function downloadInstagramVideo(reelUrl: string, outputPath: string, browserCookies?: string, cookiesFile?: string): Promise<void> {
   try {
     // Call the Python worker to download the Instagram Reel
     const response = await fetch(`${config.WORKER_PYTHON_URL}/download-instagram`, {
@@ -122,6 +122,8 @@ async function downloadInstagramVideo(reelUrl: string, outputPath: string): Prom
       body: JSON.stringify({
         url: reelUrl,
         output_path: outputPath,
+        browser_cookies: browserCookies,
+        cookies_file: cookiesFile,
       }),
     });
 

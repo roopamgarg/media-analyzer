@@ -23,7 +23,12 @@ export async function fetchAndExtract(ctx: {
       throw new Error('Invalid Instagram Reel URL format');
     }
     
-    const reelData = await downloadInstagramReel(ctx.input.instagramReelUrl);
+    // Extract cookie options from context
+    const cookieOptions = ctx.options.cookieOptions;
+    const browserCookies = cookieOptions?.browserCookies;
+    const cookiesFile = cookieOptions?.cookiesFile;
+    
+    const reelData = await downloadInstagramReel(ctx.input.instagramReelUrl, browserCookies, cookiesFile);
     videoPath = reelData.videoPath;
     caption = reelData.caption;
   } else if (ctx.input.url) {

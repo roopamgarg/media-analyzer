@@ -19,6 +19,8 @@ app = FastAPI(title="Media Analyzer Worker", version="1.0.0")
 class InstagramDownloadRequest(BaseModel):
     url: str
     output_path: Optional[str] = None
+    browser_cookies: Optional[str] = None  # e.g., 'chrome', 'firefox', 'safari'
+    cookies_file: Optional[str] = None     # Path to cookies.txt file
 
 class InstagramDownloadResponse(BaseModel):
     success: bool
@@ -144,7 +146,11 @@ async def download_instagram(request: InstagramDownloadRequest):
     start_time = time.time()
     
     try:
-        downloader = InstagramDownloader()
+        # Initialize downloader with cookie options
+        downloader = InstagramDownloader(
+            browser_cookies=request.browser_cookies,
+            cookies_file=request.cookies_file
+        )
         
         # Download the Instagram Reel
         result = downloader.download_reel(request.url, request.output_path)

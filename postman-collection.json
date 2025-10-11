@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Media Analyzer API",
-    "description": "Collection for testing the Media Analyzer API",
+    "description": "Complete collection for testing the Media Analyzer API including Instagram Reel analysis with cookie support, Python worker endpoints, and all authentication flows.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -129,7 +129,7 @@
       }
     },
     {
-      "name": "Analyze Instagram Reel",
+      "name": "Analyze Instagram Reel (Basic)",
       "request": {
         "method": "POST",
         "header": [
@@ -146,7 +146,61 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"input\": {\n    \"instagramReelUrl\": \"https://www.instagram.com/reel/ABC123DEF456/\"\n  },\n  \"brandKit\": {\n    \"inline\": {\n      \"brandName\": \"TestBrand\",\n      \"palette\": [\"#FF0000\", \"#00FF00\", \"#0000FF\"],\n      \"doDonts\": {\n        \"do\": [\"Use our brand colors\", \"Be positive and engaging\"],\n        \"dont\": [\"Mention competitors\", \"Make health claims\"]\n      },\n      \"competitors\": [\"CompetitorA\", \"CompetitorB\"],\n      \"keywords\": {\n        \"tone\": [\"friendly\", \"professional\", \"innovative\"],\n        \"avoid\": [\"aggressive\", \"negative\", \"misleading\"]\n      }\n    }\n  },\n  \"category\": \"Beauty\",\n  \"options\": {\n    \"returnPdf\": false,\n    \"evidence\": {\n      \"screenshots\": true,\n      \"transcriptSpans\": true,\n      \"frames\": [0, 1, 3, 5, 10]\n    }\n  }\n}"
+          "raw": "{\n  \"input\": {\n    \"instagramReelUrl\": \"{{instagram_reel_url}}\"\n  },\n  \"brandKit\": {\n    \"inline\": {\n      \"brandName\": \"TestBrand\",\n      \"palette\": [\"#FF0000\", \"#00FF00\", \"#0000FF\"],\n      \"doDonts\": {\n        \"do\": [\"Use our brand colors\", \"Be positive and engaging\"],\n        \"dont\": [\"Mention competitors\", \"Make health claims\"]\n      },\n      \"competitors\": [\"CompetitorA\", \"CompetitorB\"],\n      \"keywords\": {\n        \"tone\": [\"friendly\", \"professional\", \"innovative\"],\n        \"avoid\": [\"aggressive\", \"negative\", \"misleading\"]\n      }\n    }\n  },\n  \"category\": \"Beauty\",\n  \"options\": {\n    \"returnPdf\": false,\n    \"evidence\": {\n      \"screenshots\": true,\n      \"transcriptSpans\": true,\n      \"frames\": [0, 1, 3, 5, 10]\n    }\n  }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/v1/analyze",
+          "host": ["{{base_url}}"],
+          "path": ["v1", "analyze"]
+        }
+      }
+    },
+    {
+      "name": "Analyze Instagram Reel (with Chrome Cookies)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"input\": {\n    \"instagramReelUrl\": \"{{instagram_reel_url}}\"\n  },\n  \"brandKit\": {\n    \"inline\": {\n      \"brandName\": \"TestBrand\",\n      \"palette\": [\"#FF0000\", \"#00FF00\", \"#0000FF\"],\n      \"doDonts\": {\n        \"do\": [\"Use our brand colors\", \"Be positive and engaging\"],\n        \"dont\": [\"Mention competitors\", \"Make health claims\"]\n      },\n      \"competitors\": [\"CompetitorA\", \"CompetitorB\"],\n      \"keywords\": {\n        \"tone\": [\"friendly\", \"professional\", \"innovative\"],\n        \"avoid\": [\"aggressive\", \"negative\", \"misleading\"]\n      }\n    }\n  },\n  \"category\": \"Beauty\",\n  \"options\": {\n    \"returnPdf\": false,\n    \"evidence\": {\n      \"screenshots\": true,\n      \"transcriptSpans\": true,\n      \"frames\": [0, 1, 3, 5, 10]\n    },\n    \"cookieOptions\": {\n      \"browserCookies\": \"chrome\"\n    }\n  }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/v1/analyze",
+          "host": ["{{base_url}}"],
+          "path": ["v1", "analyze"]
+        }
+      }
+    },
+    {
+      "name": "Analyze Instagram Reel (with Cookies File)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"input\": {\n    \"instagramReelUrl\": \"{{instagram_reel_url}}\"\n  },\n  \"brandKit\": {\n    \"inline\": {\n      \"brandName\": \"TestBrand\",\n      \"palette\": [\"#FF0000\", \"#00FF00\", \"#0000FF\"],\n      \"doDonts\": {\n        \"do\": [\"Use our brand colors\", \"Be positive and engaging\"],\n        \"dont\": [\"Mention competitors\", \"Make health claims\"]\n      },\n      \"competitors\": [\"CompetitorA\", \"CompetitorB\"],\n      \"keywords\": {\n        \"tone\": [\"friendly\", \"professional\", \"innovative\"],\n        \"avoid\": [\"aggressive\", \"negative\", \"misleading\"]\n      }\n    }\n  },\n  \"category\": \"Beauty\",\n  \"options\": {\n    \"returnPdf\": false,\n    \"evidence\": {\n      \"screenshots\": true,\n      \"transcriptSpans\": true,\n      \"frames\": [0, 1, 3, 5, 10]\n    },\n    \"cookieOptions\": {\n      \"cookiesFile\": \"{{cookies_file_path}}\"\n    }\n  }\n}"
         },
         "url": {
           "raw": "{{base_url}}/v1/analyze",
@@ -184,6 +238,172 @@
           "path": ["metrics"]
         }
       }
+    },
+    {
+      "name": "Get Config (Debug)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/config",
+          "host": ["{{base_url}}"],
+          "path": ["config"]
+        }
+      }
+    },
+    {
+      "name": "Python Worker - Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{worker_python_url}}/health",
+          "host": ["{{worker_python_url}}"],
+          "path": ["health"]
+        }
+      }
+    },
+    {
+      "name": "Python Worker - Download Instagram (Basic)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"url\": \"{{instagram_reel_url}}\"\n}"
+        },
+        "url": {
+          "raw": "{{worker_python_url}}/download-instagram",
+          "host": ["{{worker_python_url}}"],
+          "path": ["download-instagram"]
+        }
+      }
+    },
+    {
+      "name": "Python Worker - Download Instagram (Chrome Cookies)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"url\": \"{{instagram_reel_url}}\",\n  \"browser_cookies\": \"chrome\"\n}"
+        },
+        "url": {
+          "raw": "{{worker_python_url}}/download-instagram",
+          "host": ["{{worker_python_url}}"],
+          "path": ["download-instagram"]
+        }
+      }
+    },
+    {
+      "name": "Python Worker - Download Instagram (Firefox Cookies)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"url\": \"{{instagram_reel_url}}\",\n  \"browser_cookies\": \"firefox\"\n}"
+        },
+        "url": {
+          "raw": "{{worker_python_url}}/download-instagram",
+          "host": ["{{worker_python_url}}"],
+          "path": ["download-instagram"]
+        }
+      }
+    },
+    {
+      "name": "Python Worker - Download Instagram (Cookies File)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"url\": \"{{instagram_reel_url}}\",\n  \"cookies_file\": \"{{cookies_file_path}}\"\n}"
+        },
+        "url": {
+          "raw": "{{worker_python_url}}/download-instagram",
+          "host": ["{{worker_python_url}}"],
+          "path": ["download-instagram"]
+        }
+      }
+    },
+    {
+      "name": "Python Worker - ASR (Speech Recognition)",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "audio",
+              "type": "file",
+              "src": "/path/to/audio.wav"
+            },
+            {
+              "key": "language_hint",
+              "value": "en",
+              "type": "text"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{worker_python_url}}/asr",
+          "host": ["{{worker_python_url}}"],
+          "path": ["asr"]
+        }
+      }
+    },
+    {
+      "name": "Python Worker - OCR (Text Recognition)",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "frames",
+              "type": "file",
+              "src": "/path/to/frame1.jpg"
+            },
+            {
+              "key": "frames",
+              "type": "file",
+              "src": "/path/to/frame2.jpg"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{worker_python_url}}/ocr",
+          "host": ["{{worker_python_url}}"],
+          "path": ["ocr"]
+        }
+      }
     }
   ],
   "variable": [
@@ -192,12 +412,24 @@
       "value": "http://localhost:3000"
     },
     {
+      "key": "worker_python_url",
+      "value": "http://localhost:8000"
+    },
+    {
       "key": "jwt_token",
-      "value": "your-jwt-token-here"
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwcm9qZWN0SWQiOiJteS1wcm9qZWN0LTEyMyIsInVzZXJJZCI6Im15LXVzZXItNDU2IiwiZW1haWwiOiJuZXd1c2VyQGV4YW1wbGUuY29tIiwiaWF0IjoxNzYwMjA2NzU1LCJleHAiOjE3NjAyOTMxNTV9.CyZ5Z1RvnSFO-St4It9DsahIZ3EzZqshJ1hvNtV7RVM"
     },
     {
       "key": "analysis_id",
       "value": "an_abc123"
+    },
+    {
+      "key": "instagram_reel_url",
+      "value": "https://www.instagram.com/reels/DO3i-MviVuG/"
+    },
+    {
+      "key": "cookies_file_path",
+      "value": "/path/to/instagram_cookies.txt"
     }
   ]
 }

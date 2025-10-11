@@ -25,17 +25,30 @@ export async function extractFrames(
   
   await fs.mkdir(tempDir, { recursive: true });
 
-  for (const timestamp of timestamps) {
+  // Get video duration first to filter out invalid timestamps
+  const duration = await getVideoDuration(videoPath);
+  const validTimestamps = timestamps.filter(t => t >= 0 && t < duration);
+  
+  if (validTimestamps.length === 0) {
+    console.warn('No valid timestamps found, using first frame');
+    validTimestamps.push(0);
+  }
+
+  for (const timestamp of validTimestamps) {
     const framePath = path.join(tempDir, `frame_${timestamp}.jpg`);
     
     await new Promise<void>((resolve, reject) => {
       ffmpeg(videoPath)
-        .seekInput(timestamp)
+        .inputOptions([`-ss`, timestamp.toString()])
         .frames(1)
         .size('720x?')
+        .outputOptions(['-q:v', '2', '-update', '1'])
         .output(framePath)
         .on('end', () => resolve())
-        .on('error', reject)
+        .on('error', (err) => {
+          console.error(`FFmpeg error for timestamp ${timestamp}:`, err);
+          reject(err);
+        })
         .run();
     });
 

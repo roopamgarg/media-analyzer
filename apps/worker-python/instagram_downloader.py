@@ -8,8 +8,10 @@ from urllib.parse import urlparse
 logger = logging.getLogger(__name__)
 
 class InstagramDownloader:
-    def __init__(self):
+    def __init__(self, browser_cookies: Optional[str] = None, cookies_file: Optional[str] = None):
         self.temp_dir = tempfile.mkdtemp(prefix="instagram_")
+        self.browser_cookies = browser_cookies  # e.g., 'chrome', 'firefox', 'safari'
+        self.cookies_file = cookies_file  # Path to cookies.txt file
         
     def download_reel(self, url: str, output_path: Optional[str] = None) -> Dict[str, Any]:
         """
@@ -39,6 +41,14 @@ class InstagramDownloader:
                 'no_warnings': True,
                 'extract_flat': False,
             }
+            
+            # Add cookie options if provided
+            if self.browser_cookies:
+                ydl_opts['cookiesfrombrowser'] = (self.browser_cookies,)
+                logger.info(f"Using cookies from browser: {self.browser_cookies}")
+            elif self.cookies_file:
+                ydl_opts['cookiefile'] = self.cookies_file
+                logger.info(f"Using cookies file: {self.cookies_file}")
             
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 # Extract info first to get metadata

@@ -48,7 +48,11 @@ export const CreateAnalysisRequest = z.object({
   category: z.enum(['Beauty', 'Health', 'Finance', 'Gaming', 'Other']),
   options: z.object({ 
     returnPdf: z.boolean().default(false), 
-    evidence: EvidenceOptions.default({}) 
+    evidence: EvidenceOptions.default({}),
+    cookieOptions: z.object({
+      browserCookies: z.enum(['chrome', 'firefox', 'safari', 'edge', 'opera', 'brave']).optional(),
+      cookiesFile: z.string().optional(),
+    }).optional()
   }).default({}),
   idempotencyKey: z.string().uuid().optional(),
 }).refine((v) => !!(v.input.url || v.input.instagramReelUrl || v.input.media), {
