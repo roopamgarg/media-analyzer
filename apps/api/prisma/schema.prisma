@@ -6,10 +6,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
-
 model Project {
   id        String   @id @default(cuid())
   name      String
@@ -27,7 +26,7 @@ model BrandKit {
   id        String   @id @default(cuid())
   projectId String
   name      String
-  data      Json     // InlineBrandKit data
+  data      String   // InlineBrandKit data (JSON string)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -48,11 +47,11 @@ model Analysis {
   error       String?
   
   // Results
-  scores      Json?    // Risk and vibe scores
-  flags       Json?    // Array of flags
-  evidence    Json?    // Evidence data
-  artifacts   Json?    // PDF URLs, etc.
-  timings     Json?    // Performance timings
+  scores      String?  // Risk and vibe scores (JSON string)
+  flags       String?  // Array of flags (JSON string)
+  evidence    String?  // Evidence data (JSON string)
+  artifacts   String?  // PDF URLs, etc. (JSON string)
+  timings     String?  // Performance timings (JSON string)
   ruleset     String   // Version of rules used
   
   createdAt   DateTime @default(now())

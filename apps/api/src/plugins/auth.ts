@@ -3,11 +3,14 @@ import fp from 'fastify-plugin';
 // Using 'any' for Fastify plugin types due to complex generic constraints
 // Fastify's plugin system has intricate type relationships that are difficult to type properly
 export const authPlugin = fp(async (fastify: any) => {
-  fastify.decorateRequest('user', null);
+  // Only decorate if not already present
+  if (!fastify.hasRequestDecorator('user')) {
+    fastify.decorateRequest('user', null);
+  }
 
   fastify.addHook('preHandler', async (request: any, reply: any) => {
-    // Skip auth for health checks
-    if (request.url.startsWith('/health')) {
+    // Skip auth for health checks and auth routes
+    if (request.url.startsWith('/health') || request.url.startsWith('/auth')) {
       return;
     }
 

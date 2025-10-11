@@ -6,6 +6,8 @@ import io
 import time
 from typing import List, Optional
 import logging
+from pydantic import BaseModel
+from instagram_downloader import InstagramDownloader
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -13,8 +15,29 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Media Analyzer Worker", version="1.0.0")
 
-# Initialize Whisper model
-model = WhisperModel("medium", compute_type="int8")
+# Pydantic models for request/response
+class InstagramDownloadRequest(BaseModel):
+    url: str
+    output_path: Optional[str] = None
+
+class InstagramDownloadResponse(BaseModel):
+    success: bool
+    video_path: Optional[str] = None
+    caption: Optional[str] = None
+    username: Optional[str] = None
+    duration: Optional[float] = None
+    error: Optional[str] = None
+
+# Initialize Whisper model lazily
+model = None
+
+def get_whisper_model():
+    global model
+    if model is None:
+        print("Loading Whisper model...")
+        model = WhisperModel("base", compute_type="int8")  # Smaller, faster model
+        print("Whisper model loaded!")
+    return model
 
 @app.get("/health")
 async def health_check():
@@ -32,8 +55,11 @@ async def asr(
         # Read audio file
         audio_data = await file.read()
         
+        # Get model (loads on first use)
+        whisper_model = get_whisper_model()
+        
         # Transcribe
-        segments, info = model.transcribe(
+        segments, info = whisper_model.transcribe(
             io.BytesIO(audio_data),
             language=language,
             beam_size=5,
@@ -108,6 +134,35 @@ async def ocr(files: List[UploadFile] = File(...)):
     except Exception as e:
         logger.error(f"OCR failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"OCR processing failed: {str(e)}")
+
+@app.post("/download-instagram", response_model=InstagramDownloadResponse)
+async def download_instagram(request: InstagramDownloadRequest):
+    """Download Instagram Reel video"""
+    start_time = time.time()
+    
+    try:
+        downloader = InstagramDownloader()
+        
+        # Download the Instagram Reel
+        result = downloader.download_reel(request.url, request.output_path)
+        
+        processing_time = time.time() - start_time
+        logger.info(f"Instagram download completed in {processing_time:.2f}s")
+        
+        return InstagramDownloadResponse(
+            success=True,
+            video_path=result['video_path'],
+            caption=result['caption'],
+            username=result['username'],
+            duration=result['duration']
+        )
+        
+    except Exception as e:
+        logger.error(f"Instagram download failed: {str(e)}")
+        return InstagramDownloadResponse(
+            success=False,
+            error=str(e)
+        )
 
 if __name__ == "__main__":
     import uvicorn

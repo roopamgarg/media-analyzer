@@ -57,10 +57,10 @@ export async function runSyncAnalysis(ctx: AnalysisContext): Promise<AnalysisRes
     const raw = await fetchAndExtract(ctx);
     timings.extract = Date.now() - extractStart;
     
-    // Step 2: Run ASR and OCR in parallel
+    // Step 2: Run ASR and OCR in parallel (only if we have audio/frames)
     const [asr, ocr] = await Promise.all([
-      callWorkerASR(raw.audioPath, ctx.input.media?.languageHint),
-      runOCR(raw.frames)
+      raw.audioPath ? callWorkerASR(raw.audioPath, ctx.input.media?.languageHint) : Promise.resolve({ segments: [], timing: 0 }),
+      raw.frames.length > 0 ? runOCR(raw.frames) : Promise.resolve({ frames: [], timing: 0 })
     ]);
     
     timings.asr = asr.timing;

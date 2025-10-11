@@ -19,4 +19,12 @@ export const healthRoutes = async (fastify: any) => {
       },
     };
   });
+
+  fastify.get('/config', async (request: any, reply: any) => {
+    const { config } = await import('../config');
+    return {
+      ANALYZE_SYNC_MAX_SECONDS: config.ANALYZE_SYNC_MAX_SECONDS,
+      WORKER_PYTHON_URL: config.WORKER_PYTHON_URL,
+    };
+  });
 };

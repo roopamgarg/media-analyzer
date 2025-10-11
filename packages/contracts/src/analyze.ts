@@ -24,6 +24,17 @@ export const InlineBrandKit = z.object({
 export const CreateAnalysisRequest = z.object({
   input: z.object({
     url: z.string().url().optional(),
+    instagramReelUrl: z.string().url().refine(
+      (url) => {
+        const instagramPatterns = [
+          /^https?:\/\/(www\.)?instagram\.com\/reel\/[A-Za-z0-9_-]+\/?$/,
+          /^https?:\/\/(www\.)?instagram\.com\/reels\/[A-Za-z0-9_-]+\/?$/,
+          /^https?:\/\/(www\.)?instagram\.com\/p\/[A-Za-z0-9_-]+\/?$/,
+        ];
+        return instagramPatterns.some(pattern => pattern.test(url));
+      },
+      { message: "Must be a valid Instagram Reel URL" }
+    ).optional(),
     media: z.object({
       videoBase64: z.string().optional(),
       caption: z.string().nullish(),
@@ -40,8 +51,8 @@ export const CreateAnalysisRequest = z.object({
     evidence: EvidenceOptions.default({}) 
   }).default({}),
   idempotencyKey: z.string().uuid().optional(),
-}).refine((v) => !!(v.input.url || v.input.media), {
-  message: 'Provide input.url or input.media',
+}).refine((v) => !!(v.input.url || v.input.instagramReelUrl || v.input.media), {
+  message: 'Provide input.url, input.instagramReelUrl, or input.media',
   path: ['input']
 }).refine((v) => !!(v.brandKit.brandKitId || v.brandKit.inline), {
   message: 'Provide brandKitId or inline',

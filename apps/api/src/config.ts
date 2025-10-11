@@ -29,7 +29,7 @@ export const config = {
   WORKER_PYTHON_URL: process.env.WORKER_PYTHON_URL || 'http://localhost:8000',
   
   // Analysis limits
-  ANALYZE_SYNC_MAX_SECONDS: parseInt(process.env.ANALYZE_SYNC_MAX_SECONDS || '10', 10),
+  ANALYZE_SYNC_MAX_SECONDS: 60, // Temporarily hardcoded for testing
   ANALYZE_MAX_FRAMES: parseInt(process.env.ANALYZE_MAX_FRAMES || '5', 10),
   ANALYZE_MAX_FILE_SIZE: parseInt(process.env.ANALYZE_MAX_FILE_SIZE || '52428800', 10), // 50MB
   

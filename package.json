@@ -12,7 +12,9 @@
     "build": "turbo run build",
     "test": "turbo run test",
     "lint": "turbo run lint",
-    "type-check": "turbo run type-check"
+    "type-check": "turbo run type-check",
+    "worker:python": "cd apps/worker-python && source venv/bin/activate && python main.py",
+    "worker:python:install": "cd apps/worker-python && python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt"
   },
   "devDependencies": {
     "turbo": "^1.10.12",

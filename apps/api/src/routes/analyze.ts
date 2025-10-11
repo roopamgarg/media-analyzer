@@ -87,6 +87,7 @@ export const analyzeRoutes = async (fastify: any) => {
       return reply.code(500).send({
         code: 'INTERNAL_ERROR',
         message: 'Analysis failed',
+        details: errorMessage,
       });
     }
   });

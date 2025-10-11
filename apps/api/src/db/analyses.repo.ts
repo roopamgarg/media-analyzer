@@ -6,15 +6,25 @@ export async function persistAnalysis(
   ctx: AnalysisContext,
   payload: AnalysisResult
 ): Promise<void> {
+  // Ensure the project exists
+  await prisma.project.upsert({
+    where: { id: ctx.projectId },
+    update: {},
+    create: {
+      id: ctx.projectId,
+      name: `Project ${ctx.projectId}`,
+    },
+  });
+
   await prisma.analysis.upsert({
     where: { id: ctx.analysisId },
     update: {
       status: 'completed',
-      scores: payload.scores as any,
-      flags: payload.flags as any,
-      evidence: payload.evidence as any,
-      artifacts: payload.artifacts as any,
-      timings: payload.timings as any,
+      scores: JSON.stringify(payload.scores),
+      flags: JSON.stringify(payload.flags),
+      evidence: JSON.stringify(payload.evidence),
+      artifacts: JSON.stringify(payload.artifacts),
+      timings: JSON.stringify(payload.timings),
       ruleset: payload.version,
       completedAt: new Date(),
     },
@@ -22,13 +32,13 @@ export async function persistAnalysis(
       id: ctx.analysisId,
       projectId: ctx.projectId,
       postId: null,
-      brandKitId: ctx.brandKit.brandKitId || null,
+      brandKitId: null, // For inline brand kits, we don't store a reference
       status: 'completed',
-      scores: payload.scores as any,
-      flags: payload.flags as any,
-      evidence: payload.evidence as any,
-      artifacts: payload.artifacts as any,
-      timings: payload.timings as any,
+      scores: JSON.stringify(payload.scores),
+      flags: JSON.stringify(payload.flags),
+      evidence: JSON.stringify(payload.evidence),
+      artifacts: JSON.stringify(payload.artifacts),
+      timings: JSON.stringify(payload.timings),
       ruleset: payload.version,
       completedAt: new Date(),
     },

@@ -3,10 +3,31 @@ import { CreateAnalysisRequest } from '@media-analyzer/contracts';
 
 describe('Analyze Route', () => {
   describe('Request Validation', () => {
-    it('should validate a valid request', () => {
+    it('should validate a valid request with URL', () => {
       const validRequest = {
         input: {
           url: 'https://example.com/video.mp4'
+        },
+        brandKit: {
+          inline: {
+            brandName: 'TestBrand',
+            palette: ['#FF0000', '#00FF00'],
+            doDonts: {
+              do: ['Use our colors'],
+              dont: ['Mention competitors']
+            }
+          }
+        },
+        category: 'Beauty'
+      };
+
+      expect(() => CreateAnalysisRequest.parse(validRequest)).not.toThrow();
+    });
+
+    it('should validate a valid request with Instagram Reel URL', () => {
+      const validRequest = {
+        input: {
+          instagramReelUrl: 'https://www.instagram.com/reel/ABC123/'
         },
         brandKit: {
           inline: {
@@ -83,6 +104,27 @@ describe('Analyze Route', () => {
           inline: {
             brandName: 'TestBrand',
             palette: ['invalid-color'],
+            doDonts: {
+              do: ['Use our colors'],
+              dont: ['Mention competitors']
+            }
+          }
+        },
+        category: 'Beauty'
+      };
+
+      expect(() => CreateAnalysisRequest.parse(invalidRequest)).toThrow();
+    });
+
+    it('should reject invalid Instagram Reel URL format', () => {
+      const invalidRequest = {
+        input: {
+          instagramReelUrl: 'https://invalid-url.com/not-instagram'
+        },
+        brandKit: {
+          inline: {
+            brandName: 'TestBrand',
+            palette: ['#FF0000'],
             doDonts: {
               do: ['Use our colors'],
               dont: ['Mention competitors']
