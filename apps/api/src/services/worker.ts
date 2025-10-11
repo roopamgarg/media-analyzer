@@ -36,7 +36,7 @@ export async function callWorkerASR(
       headers: {
         ...formData.getHeaders(),
       },
-      timeout: 30000, // 30 second timeout
+      timeout: 120000, // 2 minute timeout for longer videos
     });
     
     const timing = Date.now() - startTime;
@@ -68,10 +68,10 @@ export async function callWorkerOCR(
       headers: {
         ...formData.getHeaders(),
       },
-      timeout: 30000,
+      timeout: 60000, // 1 minute timeout for OCR
     });
     
-    return response.data;
+    return response.data.frames || response.data;
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     throw new Error(`OCR failed: ${errorMessage}`);

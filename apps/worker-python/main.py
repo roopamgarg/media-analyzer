@@ -127,7 +127,10 @@ async def ocr(files: List[UploadFile] = File(...)):
         timing = (time.time() - start_time) * 1000
         
         return {
-            "results": results,
+            "frames": [{
+                "t": i,
+                "boxes": result["boxes"]
+            } for i, result in enumerate(results)],
             "timing": timing
         }
         

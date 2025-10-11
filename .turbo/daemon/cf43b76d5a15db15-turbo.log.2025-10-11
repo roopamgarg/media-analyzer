@@ -280,3 +280,43 @@
 2025-10-11T19:13:56.599808Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/worker-python/main.py"), AnchoredSystemPathBuf("apps/api/src/routes/health.ts"), AnchoredSystemPathBuf("apps/api/src/services/instagram.ts"), AnchoredSystemPathBuf("apps/worker-python/instagram_downloader.py"), AnchoredSystemPathBuf("apps/api/src/config.ts")}
 2025-10-11T19:13:56.599832Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }, WorkspacePackage { name: Other("@media-analyzer/api"), path: AnchoredSystemPathBuf("apps/api") }}))
 2025-10-11T19:13:56.617015Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2025-10-11T19:15:15.501026Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/worker-python/main.py"), AnchoredSystemPathBuf("apps/api/src/routes/analyze.ts"), AnchoredSystemPathBuf("package.json"), AnchoredSystemPathBuf("apps/api/src/routes/auth.ts")}
+2025-10-11T19:15:15.501049Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(All)
+2025-10-11T19:15:15.601406Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/api/src/routes/auth.ts"), AnchoredSystemPathBuf("apps/worker-python/main.py"), AnchoredSystemPathBuf("package.json")}
+2025-10-11T19:15:15.601428Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(All)
+2025-10-11T19:15:40.201918Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".turbo/cookies/35.cookie")}
+2025-10-11T19:15:40.201934Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-10-11T19:16:01.601243Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/api/src/services/worker.ts")}
+2025-10-11T19:16:01.601255Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@media-analyzer/api"), path: AnchoredSystemPathBuf("apps/api") }}))
+2025-10-11T19:16:09.601305Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/api/src/services/worker.ts")}
+2025-10-11T19:16:09.601328Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@media-analyzer/api"), path: AnchoredSystemPathBuf("apps/api") }}))
+2025-10-11T19:17:09.604486Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/api/src/services/ocr.ts")}
+2025-10-11T19:17:09.604506Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@media-analyzer/api"), path: AnchoredSystemPathBuf("apps/api") }}))
+2025-10-11T19:17:17.108399Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/worker-python/main.py")}
+2025-10-11T19:17:17.108417Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-10-11T19:17:21.209448Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/api/src/services/ocr.ts")}
+2025-10-11T19:17:21.209465Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@media-analyzer/api"), path: AnchoredSystemPathBuf("apps/api") }}))
+2025-10-11T19:18:23.113006Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/api/src/services/evidence.ts")}
+2025-10-11T19:18:23.113025Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@media-analyzer/api"), path: AnchoredSystemPathBuf("apps/api") }}))
+2025-10-11T19:18:36.814395Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/api/src/services/worker.ts")}
+2025-10-11T19:18:36.814419Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@media-analyzer/api"), path: AnchoredSystemPathBuf("apps/api") }}))
+2025-10-11T19:18:49.314214Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/api/src/services/worker.ts")}
+2025-10-11T19:18:49.314232Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@media-analyzer/api"), path: AnchoredSystemPathBuf("apps/api") }}))
+2025-10-11T19:18:59.113709Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/api/src/services/ocr.ts")}
+2025-10-11T19:18:59.113721Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@media-analyzer/api"), path: AnchoredSystemPathBuf("apps/api") }}))
+2025-10-11T19:19:06.313882Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/api/src/services/ocr.ts")}
+2025-10-11T19:19:06.313909Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@media-analyzer/api"), path: AnchoredSystemPathBuf("apps/api") }}))
+2025-10-11T19:20:01.514857Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/api/prisma/dev.db-journal")}
+2025-10-11T19:20:01.514875Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@media-analyzer/api"), path: AnchoredSystemPathBuf("apps/api") }}))
+2025-10-11T19:20:23.315055Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/api/src/services/worker.ts"), AnchoredSystemPathBuf("apps/worker-python/main.py"), AnchoredSystemPathBuf("apps/api/src/services/evidence.ts"), AnchoredSystemPathBuf("apps/api/src/services/ocr.ts")}
+2025-10-11T19:20:23.315084Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }, WorkspacePackage { name: Other("@media-analyzer/api"), path: AnchoredSystemPathBuf("apps/api") }}))
+2025-10-11T19:20:23.315164Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2025-10-11T19:20:24.215509Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/api/prisma/dev.db")}
+2025-10-11T19:20:24.215523Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@media-analyzer/api"), path: AnchoredSystemPathBuf("apps/api") }}))
+2025-10-11T19:20:24.215557Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2025-10-11T19:20:57.315734Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/api/prisma/dev.db-journal")}
+2025-10-11T19:20:57.315745Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@media-analyzer/api"), path: AnchoredSystemPathBuf("apps/api") }}))
+2025-10-11T19:27:39.316756Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/api/prisma/dev.db-journal")}
+2025-10-11T19:27:39.316802Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@media-analyzer/api"), path: AnchoredSystemPathBuf("apps/api") }}))
+2025-10-11T19:32:31.718848Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/api/prisma/dev.db-journal")}
+2025-10-11T19:32:31.718899Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@media-analyzer/api"), path: AnchoredSystemPathBuf("apps/api") }}))

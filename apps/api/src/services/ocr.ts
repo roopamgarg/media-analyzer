@@ -29,7 +29,7 @@ export async function runOCR(
     const timing = Date.now() - startTime;
     
     return {
-      frames: result,
+      frames: Array.isArray(result) ? result : (result as any).frames || [],
       timing,
     };
   } catch (error) {

@@ -23,15 +23,12 @@ export interface Evidence {
 export async function assembleEvidence(args: AssembleEvidenceArgs): Promise<Evidence> {
   const { flags, frames, doc, s3Prefix } = args;
   
-  // Upload frames to S3
-  const uploadedFrames = await uploadFrames(frames, s3Prefix);
-  
-  // Create evidence object
+  // For development, skip S3 uploads and use placeholder URLs
   const evidence: Evidence = {
-    frames: uploadedFrames.map((uploaded, index) => ({
-      t: frames[index].t,
-      imageUrl: uploaded.url,
-      ocr: frames[index].ocrText,
+    frames: frames.map((frame, index) => ({
+      t: frame.t,
+      imageUrl: `data:image/jpeg;base64,${frame.buffer.toString('base64')}`, // Use base64 data URL for development
+      ocr: frame.ocrText,
     })),
     caption: doc.timeline.find(t => t.source === 'caption')?.text || null,
     transcript: doc.fullText || null,
