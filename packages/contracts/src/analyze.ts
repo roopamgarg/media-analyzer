@@ -71,6 +71,57 @@ export const Flag = z.object({
   evidence: z.record(z.any()).optional(),
 });
 
+export const VideoContentAnalysis = z.object({
+  // Core Content Analysis
+  content: z.object({
+    summary: z.string(),
+    mainMessage: z.string(),
+    keyTopics: z.array(z.string()),
+    contentType: z.enum(['educational', 'entertainment', 'promotional', 'lifestyle', 'tutorial', 'story', 'other']),
+    targetAudience: z.string().optional(),
+  }),
+  
+  // Hook & Engagement Analysis
+  hook: z.object({
+    openingHook: z.string(),
+    hookType: z.enum(['question', 'statement', 'visual', 'story', 'trend', 'challenge', 'other']),
+    engagementElements: z.array(z.string()),
+    callToAction: z.string().optional(),
+  }),
+  
+  // Visual & Audio Analysis
+  production: z.object({
+    visualQuality: z.enum(['low', 'medium', 'high', 'professional']),
+    audioQuality: z.enum(['low', 'medium', 'high', 'professional']),
+    editingStyle: z.enum(['minimal', 'moderate', 'dynamic', 'professional']),
+    colorScheme: z.array(z.string()).optional(),
+    visualElements: z.array(z.string()).optional(),
+  }),
+  
+  // Performance Indicators
+  performance: z.object({
+    pacing: z.enum(['slow', 'moderate', 'fast', 'varied']),
+    energyLevel: z.enum(['low', 'medium', 'high']),
+    emotionalTone: z.enum(['positive', 'neutral', 'negative', 'mixed']),
+    authenticity: z.enum(['low', 'medium', 'high']),
+  }),
+  
+  // Brand Alignment
+  brandAlignment: z.object({
+    brandFit: z.number().min(0).max(10),
+    messagingConsistency: z.number().min(0).max(10),
+    visualConsistency: z.number().min(0).max(10),
+    toneAlignment: z.number().min(0).max(10),
+  }),
+  
+  // Recommendations
+  recommendations: z.object({
+    strengths: z.array(z.string()),
+    improvements: z.array(z.string()),
+    suggestedActions: z.array(z.string()),
+  }),
+});
+
 export const AnalysisResult = z.object({
   analysisId: z.string(),
   mode: z.literal('sync'),
@@ -91,6 +142,7 @@ export const AnalysisResult = z.object({
     caption: z.string().nullish(), 
     transcript: z.string().nullish() 
   }),
+  videoContent: VideoContentAnalysis,
   artifacts: z.object({ pdfUrl: z.string().nullable() }),
   timings: z.object({ totalMs: z.number(), stages: z.record(z.number()) }),
   version: z.string()
@@ -116,6 +168,7 @@ export type EvidenceOptions = z.infer<typeof EvidenceOptions>;
 export type InlineBrandKit = z.infer<typeof InlineBrandKit>;
 export type CreateAnalysisRequest = z.infer<typeof CreateAnalysisRequest>;
 export type Flag = z.infer<typeof Flag>;
+export type VideoContentAnalysis = z.infer<typeof VideoContentAnalysis>;
 export type AnalysisResult = z.infer<typeof AnalysisResult>;
 export type AnalysisAccepted = z.infer<typeof AnalysisAccepted>;
 export type AnalysisStatus = z.infer<typeof AnalysisStatus>;

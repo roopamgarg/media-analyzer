@@ -8,6 +8,7 @@ import { buildTimedDoc, ner } from './nlp';
 import { buildFlags } from './rules';
 import { scoreAll } from './scoring';
 import { assembleEvidence } from './evidence';
+import { analyzeVideoContent } from './video-content-analyzer';
 import { persistAnalysis } from '../db/analyses.repo';
 import { BrandKit, Scores } from '../types/services';
 import { Flag } from '@media-analyzer/contracts';
@@ -91,12 +92,18 @@ export async function runSyncAnalysis(ctx: AnalysisContext): Promise<AnalysisRes
     const evidence = await assembleEvidence({ flags, frames: raw.frames, doc, s3Prefix: ctx.s3Prefix });
     timings.evidence = Date.now() - evidenceStart;
     
-    // Step 8: Create result
+    // Step 8: Analyze video content
+    const videoContentStart = Date.now();
+    const videoContent = await analyzeVideoContent(ctx, doc.fullText, raw.caption || null, raw.frames);
+    timings.videoContent = Date.now() - videoContentStart;
+    
+    // Step 9: Create result
     const result = makeResult({
       analysisId: ctx.analysisId,
       scores,
       flags,
       evidence,
+      videoContent,
       t0,
       timings,
     });
@@ -117,6 +124,7 @@ function makeResult({
   scores,
   flags,
   evidence,
+  videoContent,
   t0,
   timings,
 }: {
@@ -128,6 +136,7 @@ function makeResult({
     caption?: string | null;
     transcript?: string | null;
   };
+  videoContent: any;
   t0: number;
   timings: Record<string, number>;
 }): AnalysisResult {
@@ -140,6 +149,7 @@ function makeResult({
     scores,
     flags,
     evidence,
+    videoContent,
     artifacts: {
       pdfUrl: null, // TODO: Generate PDF if requested
     },

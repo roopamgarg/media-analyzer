@@ -1,0 +1,38 @@
+name: "Custom Analysis Rules"
+version: "1.0.0"
+description: "Custom rules for detailed content analysis"
+
+rules:
+  - id: "EMOTIONAL_IMPACT_HIGH"
+    type: "claim"
+    severity: "medium"
+    message: "High emotional impact content detected"
+    patterns:
+      - "love"
+      - "heart"
+      - "forever"
+      - "never leave"
+      - "always"
+    category: "Other"
+    
+  - id: "AESTHETIC_CONTENT"
+    type: "visual_identity"
+    severity: "low"
+    message: "Aesthetic/visual content detected"
+    patterns:
+      - "aesthetic"
+      - "visual"
+      - "beautiful"
+      - "stunning"
+    category: "Other"
+    
+  - id: "REPETITIVE_CONTENT"
+    type: "other"
+    severity: "low"
+    message: "Repetitive content pattern detected"
+    patterns:
+      - "the one who"
+      - "will never"
+      - "loves you"
+    category: "Other"
+
