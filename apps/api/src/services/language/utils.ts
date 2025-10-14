@@ -19,6 +19,14 @@ export function hasLatinScript(text: string): boolean {
 }
 
 /**
+ * Check if text contains Arabic script (Urdu characters)
+ */
+export function hasArabicScript(text: string): boolean {
+  // Arabic Unicode range: U+0600-U+06FF
+  return /[\u0600-\u06FF]/.test(text);
+}
+
+/**
  * Normalize Hinglish text by handling common transliterations
  */
 export function normalizeHinglish(text: string): string {
@@ -64,8 +72,8 @@ export function normalizeHinglish(text: string): string {
  * Tokenize text based on language
  */
 export function tokenizeMultilingual(text: string, language: string): string[] {
-  if (language === 'hi' || language === 'hi-en') {
-    // For Hindi/Hinglish, split on spaces and punctuation
+  if (language === 'hi' || language === 'hi-en' || language === 'ur' || language === 'ur-en') {
+    // For Hindi/Hinglish/Urdu/Urdu-English, split on spaces and punctuation
     return text.split(/[\s\u2000-\u206F\u2E00-\u2E7F\u3000-\u303F\uFF00-\uFFEF]+/)
       .filter(token => token.length > 0);
   }
@@ -79,25 +87,31 @@ export function tokenizeMultilingual(text: string, language: string): string[] {
  */
 export function analyzeTextScripts(text: string): {
   hasDevanagari: boolean;
+  hasArabic: boolean;
   hasLatin: boolean;
   isMixed: boolean;
   devanagariRatio: number;
+  arabicRatio: number;
   latinRatio: number;
 } {
   const hasDevanagari = hasDevanagariScript(text);
+  const hasArabic = hasArabicScript(text);
   const hasLatin = hasLatinScript(text);
-  const isMixed = hasDevanagari && hasLatin;
+  const isMixed = [hasDevanagari, hasArabic, hasLatin].filter(Boolean).length > 1;
   
   // Calculate character ratios
   const devanagariChars = (text.match(/[\u0900-\u097F]/g) || []).length;
+  const arabicChars = (text.match(/[\u0600-\u06FF]/g) || []).length;
   const latinChars = (text.match(/[a-zA-Z]/g) || []).length;
   const totalChars = text.length;
   
   return {
     hasDevanagari,
+    hasArabic,
     hasLatin,
     isMixed,
     devanagariRatio: totalChars > 0 ? devanagariChars / totalChars : 0,
+    arabicRatio: totalChars > 0 ? arabicChars / totalChars : 0,
     latinRatio: totalChars > 0 ? latinChars / totalChars : 0
   };
 }

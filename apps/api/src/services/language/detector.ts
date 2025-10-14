@@ -1,13 +1,19 @@
 import { SupportedLanguage, LanguageDetectionResult } from './types';
-import { hasDevanagariScript, hasLatinScript } from './utils';
+import { hasDevanagariScript, hasArabicScript, hasLatinScript, analyzeTextScripts } from './utils';
 
 // Simple language detection without external dependencies
 function detectLanguageSimple(text: string): string {
   const hasDevanagari = hasDevanagariScript(text);
+  const hasArabic = hasArabicScript(text);
   const hasLatin = hasLatinScript(text);
   
-  if (hasDevanagari && hasLatin) {
-    return 'hi-en'; // Hinglish
+  // Check for mixed languages
+  if (hasArabic && hasLatin) {
+    return 'ur-en'; // Urdu-English
+  } else if (hasDevanagari && hasLatin) {
+    return 'hi-en'; // Hindi-English (Hinglish)
+  } else if (hasArabic) {
+    return 'ur'; // Urdu
   } else if (hasDevanagari) {
     return 'hi'; // Hindi
   } else if (hasLatin) {
@@ -21,36 +27,44 @@ function detectLanguageSimple(text: string): string {
  * Detect language from text with optional language hint
  */
 export function detectLanguage(text: string, languageHint?: string): LanguageDetectionResult {
-  // If language hint is provided, validate and return it
+  // Validate language hint against actual text content
   if (languageHint) {
     const normalizedHint = normalizeLanguageCode(languageHint);
     if (isValidLanguageCode(normalizedHint)) {
-      return {
-        language: normalizedHint,
-        confidence: 1.0,
-        isHinglish: normalizedHint === 'hi-en'
-      };
+      const validationResult = validateLanguageHint(text, normalizedHint);
+      if (validationResult.confidence > 0.7) {
+        return validationResult;
+      }
     }
   }
 
-  // Auto-detect language using simple heuristics
+  // Auto-detect language using script analysis
+  const scriptAnalysis = analyzeTextScripts(text);
+  
+  if (scriptAnalysis.isMixed) {
+    return detectMixedLanguage(text, scriptAnalysis);
+  }
+  
   const detectedLang = detectLanguageSimple(text);
   
-  // Check for Hinglish patterns
+  // Check for Hinglish patterns (legacy support)
   const isHinglish = isHinglishText(text);
-  
   if (isHinglish) {
     return {
       language: 'hi-en',
       confidence: 0.8,
-      isHinglish: true
+      isHinglish: true,
+      isMixed: true,
+      detectionMethod: 'pattern'
     };
   }
 
   return {
     language: isValidLanguageCode(detectedLang) ? detectedLang : 'unknown',
     confidence: detectedLang === 'unknown' ? 0.0 : 0.7,
-    isHinglish: false
+    isHinglish: false,
+    isMixed: false,
+    detectionMethod: 'script'
   };
 }
 
@@ -94,6 +108,9 @@ function normalizeLanguageCode(code: string): SupportedLanguage {
     case 'hi':
     case 'hin':
       return 'hi';
+    case 'ur':
+    case 'urd':
+      return 'ur';
     default:
       return 'unknown';
   }
@@ -103,5 +120,111 @@ function normalizeLanguageCode(code: string): SupportedLanguage {
  * Check if language code is valid
  */
 function isValidLanguageCode(code: string): code is SupportedLanguage {
-  return ['en', 'hi', 'hi-en', 'unknown'].includes(code);
+  return ['en', 'hi', 'ur', 'hi-en', 'ur-en', 'unknown'].includes(code);
+}
+
+/**
+ * Validate language hint against actual text content
+ */
+function validateLanguageHint(text: string, hint: SupportedLanguage): LanguageDetectionResult {
+  const scriptAnalysis = analyzeTextScripts(text);
+  
+  // Validate hint matches actual content
+  if (hint === 'ur' && scriptAnalysis.hasArabic) {
+    return {
+      language: 'ur',
+      confidence: 0.9,
+      isMixed: false,
+      detectionMethod: 'hint'
+    };
+  }
+  
+  if (hint === 'hi' && scriptAnalysis.hasDevanagari) {
+    return {
+      language: 'hi',
+      confidence: 0.9,
+      isMixed: false,
+      detectionMethod: 'hint'
+    };
+  }
+  
+  if (hint === 'en' && scriptAnalysis.hasLatin && !scriptAnalysis.hasArabic && !scriptAnalysis.hasDevanagari) {
+    return {
+      language: 'en',
+      confidence: 0.9,
+      isMixed: false,
+      detectionMethod: 'hint'
+    };
+  }
+  
+  if (hint === 'ur-en' && scriptAnalysis.hasArabic && scriptAnalysis.hasLatin) {
+    return {
+      language: 'ur-en',
+      confidence: 0.9,
+      isMixed: true,
+      detectionMethod: 'hint'
+    };
+  }
+  
+  if (hint === 'hi-en' && scriptAnalysis.hasDevanagari && scriptAnalysis.hasLatin) {
+    return {
+      language: 'hi-en',
+      confidence: 0.9,
+      isHinglish: true,
+      isMixed: true,
+      detectionMethod: 'hint'
+    };
+  }
+  
+  // Hint doesn't match content - return lower confidence
+  return {
+    language: hint,
+    confidence: 0.5,
+    isMixed: scriptAnalysis.isMixed,
+    detectionMethod: 'hint'
+  };
+}
+
+/**
+ * Detect mixed language based on script analysis
+ */
+function detectMixedLanguage(text: string, scriptAnalysis: any): LanguageDetectionResult {
+  const { arabicRatio, devanagariRatio, latinRatio } = scriptAnalysis;
+  
+  // Determine primary script by ratio
+  const ratios = [
+    { script: 'arabic', ratio: arabicRatio },
+    { script: 'devanagari', ratio: devanagariRatio },
+    { script: 'latin', ratio: latinRatio }
+  ].sort((a, b) => b.ratio - a.ratio);
+  
+  const primaryScript = ratios[0].script;
+  
+  // Urdu-English mix
+  if (scriptAnalysis.hasArabic && scriptAnalysis.hasLatin) {
+    return {
+      language: 'ur-en',
+      confidence: 0.8,
+      isMixed: true,
+      detectionMethod: 'script'
+    };
+  }
+  
+  // Hindi-English mix (Hinglish)
+  if (scriptAnalysis.hasDevanagari && scriptAnalysis.hasLatin) {
+    return {
+      language: 'hi-en',
+      confidence: 0.8,
+      isHinglish: true,
+      isMixed: true,
+      detectionMethod: 'script'
+    };
+  }
+  
+  return {
+    language: 'unknown',
+    confidence: 0,
+    isMixed: true,
+    detectionMethod: 'script'
+  };
 }

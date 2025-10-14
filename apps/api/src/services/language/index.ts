@@ -11,6 +11,7 @@ export { detectLanguage, isHinglishText } from './detector';
 // Export utilities
 export { 
   hasDevanagariScript, 
+  hasArabicScript,
   hasLatinScript, 
   normalizeHinglish, 
   tokenizeMultilingual, 
@@ -18,7 +19,7 @@ export {
 } from './utils';
 
 // Export stop words
-export { getStopWords, STOP_WORDS_EN, STOP_WORDS_HI, STOP_WORDS_HINGLISH } from './stopwords';
+export { getStopWords, STOP_WORDS_EN, STOP_WORDS_HI, STOP_WORDS_UR, STOP_WORDS_HINGLISH, STOP_WORDS_UR_EN } from './stopwords';
 
 // Export sentiment analysis
 export { analyzeSentimentMultilingual, SENTIMENT_LEXICON_HI, SENTIMENT_LEXICON_HINGLISH } from './sentiment';

@@ -26,6 +26,29 @@ export const STOP_WORDS_HI = new Set([
 ]);
 
 /**
+ * Urdu stop words
+ */
+export const STOP_WORDS_UR = new Set([
+  'اور', 'کا', 'کی', 'ہے', 'میں', 'یہ', 'سے', 'کو', 'ایک', 'پر', 'کے', 'نے', 'ہیں',
+  'میں', 'تم', 'وہ', 'ہم', 'آپ', 'ان', 'مجھے', 'اسے', 'ہمیں', 'میرا', 'تمہارا', 'اس کا', 'ہمارا', 'ان کا',
+  'کر', 'کرتا', 'کرتی', 'کرتے', 'کرنا', 'کرنے', 'کیا', 'کی', 'کیے', 'کریں',
+  'ہو', 'ہوتا', 'ہوتی', 'ہوتے', 'ہونا', 'ہونے', 'ہوا', 'ہوئی', 'ہوئے', 'ہوں',
+  'جا', 'جاتا', 'جاتی', 'جاتے', 'جانا', 'جانے', 'گیا', 'گئی', 'گئے', 'جائیں',
+  'آ', 'آتا', 'آتی', 'آتے', 'آنا', 'آنے', 'آیا', 'آئی', 'آئے', 'آئیں',
+  'دے', 'دیتا', 'دیتی', 'دیتے', 'دینا', 'دینے', 'دیا', 'دی', 'دیے', 'دیں',
+  'لے', 'لیتا', 'لیتی', 'لیتے', 'لینا', 'لینا', 'لیا', 'لی', 'لیے', 'لیں'
+]);
+
+/**
+ * Urdu-English stop words (combination)
+ */
+export const STOP_WORDS_UR_EN = new Set([
+  ...STOP_WORDS_EN,
+  ...STOP_WORDS_UR,
+  'kya', 'hai', 'aur', 'mein', 'yeh', 'se', 'ko', 'ka', 'ki', 'ke'
+]);
+
+/**
  * Hinglish stop words (combination of English and Hindi)
  */
 export const STOP_WORDS_HINGLISH = new Set([
@@ -47,8 +70,12 @@ export function getStopWords(language: SupportedLanguage): Set<string> {
       return STOP_WORDS_EN;
     case 'hi':
       return STOP_WORDS_HI;
+    case 'ur':
+      return STOP_WORDS_UR;
     case 'hi-en':
       return STOP_WORDS_HINGLISH;
+    case 'ur-en':
+      return STOP_WORDS_UR_EN;
     default:
       return STOP_WORDS_EN;
   }

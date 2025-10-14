@@ -2,12 +2,14 @@
  * Language support types for multilingual keyword extraction
  */
 
-export type SupportedLanguage = 'en' | 'hi' | 'hi-en' | 'unknown';
+export type SupportedLanguage = 'en' | 'hi' | 'ur' | 'hi-en' | 'ur-en' | 'unknown';
 
 export interface LanguageDetectionResult {
   language: SupportedLanguage;
   confidence: number;
   isHinglish?: boolean;
+  isMixed?: boolean;
+  detectionMethod?: 'hint' | 'script' | 'pattern';
 }
 
 export interface LanguageConfig {
@@ -34,6 +36,7 @@ export interface MultilingualTextAnalysis {
   language: SupportedLanguage;
   confidence: number;
   hasDevanagari: boolean;
+  hasArabic: boolean;
   hasLatin: boolean;
   isMixed: boolean;
 }

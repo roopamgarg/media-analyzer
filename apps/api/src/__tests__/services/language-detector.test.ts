@@ -5,13 +5,13 @@ describe('Language Detector', () => {
     it('should return language hint when provided', () => {
       const result = detectLanguage('Hello world', 'en');
       expect(result.language).toBe('en');
-      expect(result.confidence).toBe(1.0);
+      expect(result.confidence).toBeGreaterThan(0.8);
     });
 
     it('should return language hint for Hindi', () => {
       const result = detectLanguage('नमस्ते दुनिया', 'hi');
       expect(result.language).toBe('hi');
-      expect(result.confidence).toBe(1.0);
+      expect(result.confidence).toBeGreaterThan(0.8);
     });
 
     it('should auto-detect English text', () => {
@@ -30,6 +30,29 @@ describe('Language Detector', () => {
       const result = detectLanguage('यह amazing day है और weather बहुत accha है');
       expect(result.language).toBe('hi-en');
       expect(result.isHinglish).toBe(true);
+    });
+
+    it('should detect Urdu text', () => {
+      const result = detectLanguage('نیتی کیا ہے کہ ضروری نہیں ہے');
+      expect(result.language).toBe('ur');
+      expect(result.confidence).toBeGreaterThan(0);
+    });
+
+    it('should detect Urdu-English mixed text', () => {
+      const result = detectLanguage('نیتی کیا ہے in fact اچھا کرنے سے CLIPHUB');
+      expect(result.language).toBe('ur-en');
+      expect(result.isMixed).toBe(true);
+    });
+
+    it('should validate language hint against text content', () => {
+      const result = detectLanguage('نیتی کیا ہے کہ ضروری نہیں ہے', 'en');
+      expect(result.confidence).toBeLessThan(0.8);
+    });
+
+    it('should accept correct language hint for Urdu', () => {
+      const result = detectLanguage('نیتی کیا ہے کہ ضروری نہیں ہے', 'ur');
+      expect(result.language).toBe('ur');
+      expect(result.confidence).toBeGreaterThan(0.8);
     });
 
     it('should return unknown for unsupported language', () => {
