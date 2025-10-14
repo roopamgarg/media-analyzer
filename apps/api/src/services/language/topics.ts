@@ -63,6 +63,68 @@ export const TOPIC_KEYWORDS_HINGLISH = {
 };
 
 /**
+ * Urdu topic keywords
+ */
+export const TOPIC_KEYWORDS_UR = {
+  'fashion': {
+    keywords: ['فیشن', 'سٹائل', 'آؤٹ فٹ', 'کپڑے', 'ڈریس', 'شرٹ', 'پینٹ', 'جوتے', 'ایکسسریز', 'بیوٹی', 'میک اپ', 'ٹرینڈی', 'سٹائلش', 'وارڈروب', 'اپریل', 'ڈیزائنر', 'برانڈ', 'فیشن ایبل', 'چک', 'الگینٹ', 'کیژول', 'فارمل', 'سٹریٹ ویئر', 'وینٹیج', 'موڈرن'],
+    weights: { 'فیشن': 2.0, 'سٹائل': 1.8, 'آؤٹ فٹ': 1.5, 'بیوٹی': 1.3 },
+    subcategories: {
+      'skincare': ['سکن کیئر', 'سکن', 'چہرہ', 'کلینزر', 'موئسچرائزر', 'سیرم', 'ٹونر', 'ایکسفولیئنٹ', 'ماسک', 'روٹین'],
+      'makeup': ['میک اپ', 'لپسٹک', 'فاؤنڈیشن', 'مسکارا', 'آئی شیڈو', 'بلش', 'کنسیلر', 'پرائمر', 'ہائی لائٹر'],
+      'clothing': ['آؤٹ فٹ', 'ڈریس', 'شرٹ', 'پینٹ', 'جوتے', 'جیکٹ', 'سویٹر', 'جینز', 'اسکرٹ', 'بلاؤز']
+    }
+  },
+  'food': {
+    keywords: ['کھانا', 'ریسیپی', 'ککنگ', 'ریسٹورانٹ', 'کھانا', 'ڈیلیشس', 'ٹیسٹی', 'اجزاء', 'کچن', 'شیف', 'کوئزن', 'ڈش', 'فلیور', 'ٹیسٹ', 'کک', 'بیک', 'گرل', 'فرائی', 'سٹیم', 'بوائل', 'سیزننگ', 'مسالہ', 'جڑی بوٹی', 'نوٹریشن', 'ہیلتھی', 'آرگینک'],
+    weights: { 'کھانا': 2.0, 'ریسیپی': 1.8, 'ککنگ': 1.5, 'ڈیلیشس': 1.3 },
+    subcategories: {
+      'cooking': ['ریسیپی', 'ککنگ', 'کچن', 'شیف', 'اجزاء', 'بیک', 'گرل', 'فرائی'],
+      'restaurant': ['ریسٹورانٹ', 'ڈائننگ', 'مینو', 'کھانا', 'کوئزن', 'شیف', 'سروس']
+    }
+  },
+  'fitness': {
+    keywords: ['فٹنس', 'ورک آؤٹ', 'ایکسرسائز', 'جم', 'ٹریننگ', 'طاقت', 'کارڈیو', 'یوگا', 'پیلٹس', 'رننگ', 'سائیکلنگ', 'سوئمنگ', 'ویٹ لفٹنگ', 'بادی بلڈنگ', 'کروس فٹ', 'ایروبکس', 'سٹریچنگ', 'میڈیٹیشن', 'ویلنس', 'ہیلتھ', 'نوٹریشن', 'ڈائٹ', 'پروٹین', 'سپلیمنٹس', 'ریکوری', 'آرام'],
+    weights: { 'فٹنس': 2.0, 'ورک آؤٹ': 1.8, 'ایکسرسائز': 1.5, 'جم': 1.3 },
+    subcategories: {
+      'gym': ['جم', 'ورک آؤٹ', 'ایکسرسائز', 'ٹریننگ', 'ویٹ لفٹنگ', 'بادی بلڈنگ'],
+      'yoga': ['یوگا', 'میڈیٹیشن', 'سٹریچنگ', 'فلیکسبیلیٹی', 'بیلنس', 'مائنڈ فلنس']
+    }
+  }
+};
+
+/**
+ * Urdu-English topic keywords
+ */
+export const TOPIC_KEYWORDS_UR_EN = {
+  'fashion': {
+    keywords: [...TOPIC_KEYWORDS_UR.fashion.keywords, 'fashion', 'style', 'outfit', 'clothes', 'dress', 'shirt', 'pants', 'shoes', 'accessories', 'beauty', 'makeup', 'trendy', 'stylish', 'wardrobe', 'apparel', 'designer', 'brand', 'fashionable', 'chic', 'elegant', 'casual', 'formal', 'streetwear', 'vintage', 'modern'],
+    weights: { ...TOPIC_KEYWORDS_UR.fashion.weights, 'fashion': 2.0, 'style': 1.8, 'outfit': 1.5, 'beauty': 1.3 },
+    subcategories: {
+      'skincare': [...TOPIC_KEYWORDS_UR.fashion.subcategories.skincare, 'skincare', 'skin', 'face', 'cleanser', 'moisturizer', 'serum', 'toner', 'exfoliant', 'mask', 'routine'],
+      'makeup': [...TOPIC_KEYWORDS_UR.fashion.subcategories.makeup, 'makeup', 'lipstick', 'foundation', 'mascara', 'eyeshadow', 'blush', 'concealer', 'primer', 'highlighter'],
+      'clothing': [...TOPIC_KEYWORDS_UR.fashion.subcategories.clothing, 'outfit', 'dress', 'shirt', 'pants', 'shoes', 'jacket', 'sweater', 'jeans', 'skirt', 'blouse']
+    }
+  },
+  'food': {
+    keywords: [...TOPIC_KEYWORDS_UR.food.keywords, 'food', 'recipe', 'cooking', 'restaurant', 'meal', 'delicious', 'tasty', 'ingredients', 'kitchen', 'chef', 'cuisine', 'dish', 'flavor', 'taste', 'cook', 'bake', 'grill', 'fry', 'steam', 'boil', 'seasoning', 'spice', 'herb', 'nutrition', 'healthy', 'organic'],
+    weights: { ...TOPIC_KEYWORDS_UR.food.weights, 'food': 2.0, 'recipe': 1.8, 'cooking': 1.5, 'delicious': 1.3 },
+    subcategories: {
+      'cooking': [...TOPIC_KEYWORDS_UR.food.subcategories.cooking, 'recipe', 'cooking', 'kitchen', 'chef', 'ingredients', 'bake', 'grill', 'fry'],
+      'restaurant': [...TOPIC_KEYWORDS_UR.food.subcategories.restaurant, 'restaurant', 'dining', 'menu', 'food', 'cuisine', 'chef', 'service']
+    }
+  },
+  'fitness': {
+    keywords: [...TOPIC_KEYWORDS_UR.fitness.keywords, 'fitness', 'workout', 'exercise', 'gym', 'training', 'strength', 'cardio', 'yoga', 'pilates', 'running', 'cycling', 'swimming', 'weight lifting', 'bodybuilding', 'crossfit', 'aerobics', 'stretching', 'meditation', 'wellness', 'health', 'nutrition', 'diet', 'protein', 'supplements', 'recovery', 'rest'],
+    weights: { ...TOPIC_KEYWORDS_UR.fitness.weights, 'fitness': 2.0, 'workout': 1.8, 'exercise': 1.5, 'gym': 1.3 },
+    subcategories: {
+      'gym': [...TOPIC_KEYWORDS_UR.fitness.subcategories.gym, 'gym', 'workout', 'exercise', 'training', 'weight lifting', 'bodybuilding'],
+      'yoga': [...TOPIC_KEYWORDS_UR.fitness.subcategories.yoga, 'yoga', 'meditation', 'stretching', 'flexibility', 'balance', 'mindfulness']
+    }
+  }
+};
+
+/**
  * Classify topics for multilingual text
  */
 export function classifyTopicsMultilingual(
@@ -81,6 +143,10 @@ export function classifyTopicsMultilingual(
     topicCategories = TOPIC_KEYWORDS_HI;
   } else if (language === 'hi-en') {
     topicCategories = TOPIC_KEYWORDS_HINGLISH;
+  } else if (language === 'ur') {
+    topicCategories = TOPIC_KEYWORDS_UR;
+  } else if (language === 'ur-en') {
+    topicCategories = TOPIC_KEYWORDS_UR_EN;
   } else {
     // Default to English topic categories (simplified)
     topicCategories = {

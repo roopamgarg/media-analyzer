@@ -58,6 +58,58 @@ export const INTENT_SIGNALS_HINGLISH = {
 };
 
 /**
+ * Urdu intent signals
+ */
+export const INTENT_SIGNALS_UR = {
+  educate: [
+    'کیسے', 'سیکھنا', 'سکھانا', 'سمجھانا', 'بتانا', 'جاننا', 'تعلیم', 'تعلیم', 'تعلیم', 'تربیت',
+    'گائیڈ', 'ٹیوٹوریل', 'سٹیپ', 'عمل', 'طریقہ', 'طریقہ', 'حل', 'حل', 'حل', 'جواب'
+  ],
+  entertain: [
+    'مزا', 'تفریح', 'ہنسی', 'کامیڈی', 'ڈانس', 'موسیقی', 'گانا', 'رقص', 'کھیل', 'گیم',
+    'چیلنج', 'پرینک', 'مذاق', 'ہنسی مذاق', 'تفریح', 'لطف', 'خوشی', 'جوش', 'رومانچ', 'مہم جوئی'
+  ],
+  promote: [
+    'خریدنا', 'بیچنا', 'فروخت', 'آفر', 'ڈسکاؤنٹ', 'پروڈکٹ', 'برانڈ', 'شاپ', 'خریداری', 'لنک',
+    'چیک آؤٹ', 'وزٹ', 'دیکھنا', 'جانا', 'آنا', 'ملنا', 'رابطہ', 'رابطہ', 'کال', 'پیغام'
+  ],
+  inspire: [
+    'تحریک', 'انسپائر', 'موٹیویشن', 'کامیابی', 'حاصل', 'خواب', 'ہدف', 'گول', 'ذہنیت', 'سوچ',
+    'امید', 'امید', 'یقین', 'بھروسہ', 'ہمت', 'بہادری', 'بہادری', 'جیت', 'فتح', 'کامیاب'
+  ],
+  inform: [
+    'خبریں', 'نیوز', 'اپڈیٹ', 'معلومات', 'حقائق', 'فیکٹ', 'مطالعہ', 'ریسرچ', 'رپورٹ', 'اعلان',
+    'اطلاع', 'معلومات', 'ڈیٹا', 'اعداد', 'اعداد و شمار', 'حقائق', 'سچ', 'حقیقت', 'حقیقت', 'حقیقت'
+  ]
+};
+
+/**
+ * Urdu-English intent signals
+ */
+export const INTENT_SIGNALS_UR_EN = {
+  educate: [
+    ...INTENT_SIGNALS_UR.educate,
+    'how to', 'tutorial', 'learn', 'teach', 'explain', 'guide', 'step by step', 'tips', 'tricks'
+  ],
+  entertain: [
+    ...INTENT_SIGNALS_UR.entertain,
+    'funny', 'joke', 'laugh', 'entertaining', 'comedy', 'dance', 'music', 'challenge', 'prank'
+  ],
+  promote: [
+    ...INTENT_SIGNALS_UR.promote,
+    'buy', 'sale', 'discount', 'offer', 'product', 'brand', 'shop', 'purchase', 'link in bio', 'check out'
+  ],
+  inspire: [
+    ...INTENT_SIGNALS_UR.inspire,
+    'motivation', 'inspire', 'motivational', 'success', 'achieve', 'dream', 'goal', 'mindset'
+  ],
+  inform: [
+    ...INTENT_SIGNALS_UR.inform,
+    'news', 'update', 'information', 'fact', 'research', 'study', 'report', 'announcement'
+  ]
+};
+
+/**
  * Detect intent for multilingual text
  */
 export function detectIntentMultilingual(
@@ -80,6 +132,10 @@ export function detectIntentMultilingual(
     intentSignals = INTENT_SIGNALS_HI;
   } else if (language === 'hi-en') {
     intentSignals = INTENT_SIGNALS_HINGLISH;
+  } else if (language === 'ur') {
+    intentSignals = INTENT_SIGNALS_UR;
+  } else if (language === 'ur-en') {
+    intentSignals = INTENT_SIGNALS_UR_EN;
   } else {
     // Default to English intent signals
     intentSignals = {

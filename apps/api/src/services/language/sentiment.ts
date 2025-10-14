@@ -35,6 +35,40 @@ export const SENTIMENT_LEXICON_HINGLISH = {
 };
 
 /**
+ * Urdu sentiment lexicon
+ */
+export const SENTIMENT_LEXICON_UR = {
+  positive: [
+    'اچھا', 'بہترین', 'خوش', 'پیار', 'سندر', 'شاندار', 'بہترین', 'عمدہ', 'محبت', 'خوشی',
+    'لطف', 'جوش', 'خوش', 'مطمئن', 'فخر', 'امید', 'امید', 'کامیاب', 'جیت', 'فتح',
+    'سکون', 'آرام', 'امن', 'خوشگوار', 'دلکش', 'خوبصورت', 'آرام دہ', 'لطف اندوز', 'پیارا', 'پسند'
+  ],
+  negative: [
+    'برا', 'غصہ', 'دکھ', 'نفرت', 'دکھی', 'اداس', 'مایوس', 'ہراس', 'غصہ', 'غصہ',
+    'دکھ', 'تکلیف', 'تکلیف', 'پریشانی', 'فکر', 'ڈر', 'خوف', 'خدشہ', 'مایوسی', 'ہراس',
+    'غصے میں', 'دکھی', 'اداس', 'مایوس', 'ہراس', 'غصہ', 'غصہ', 'دکھی', 'اداس'
+  ]
+};
+
+/**
+ * Urdu-English sentiment lexicon
+ */
+export const SENTIMENT_LEXICON_UR_EN = {
+  positive: [
+    ...SENTIMENT_LEXICON_UR.positive,
+    'good', 'great', 'amazing', 'wonderful', 'fantastic', 'excellent', 'perfect', 'love', 'like', 'enjoy',
+    'happy', 'joy', 'fun', 'exciting', 'thrilling', 'inspiring', 'motivating', 'encouraging',
+    'success', 'victory', 'win', 'achieve', 'accomplish', 'succeed', 'triumph', 'conquer', 'overcome', 'master'
+  ],
+  negative: [
+    ...SENTIMENT_LEXICON_UR.negative,
+    'bad', 'worst', 'hate', 'angry', 'sad', 'upset', 'disappointed', 'frustrated', 'annoyed', 'irritated',
+    'mad', 'furious', 'rage', 'anger', 'sadness', 'grief', 'pain', 'suffering', 'hurt', 'wounded',
+    'broken', 'defeated', 'failed', 'lose', 'loss', 'defeat', 'terrible', 'awful', 'horrible', 'disgusting'
+  ]
+};
+
+/**
  * Analyze sentiment for multilingual text
  */
 export function analyzeSentimentMultilingual(
@@ -59,6 +93,12 @@ export function analyzeSentimentMultilingual(
   } else if (language === 'hi-en') {
     positiveWords = SENTIMENT_LEXICON_HINGLISH.positive;
     negativeWords = SENTIMENT_LEXICON_HINGLISH.negative;
+  } else if (language === 'ur') {
+    positiveWords = SENTIMENT_LEXICON_UR.positive;
+    negativeWords = SENTIMENT_LEXICON_UR.negative;
+  } else if (language === 'ur-en') {
+    positiveWords = SENTIMENT_LEXICON_UR_EN.positive;
+    negativeWords = SENTIMENT_LEXICON_UR_EN.negative;
   } else {
     // Default to English sentiment analysis
     return analyzeEnglishSentiment(combinedText);
