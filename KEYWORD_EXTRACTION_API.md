@@ -315,7 +315,7 @@ POST /v1/keywords/extract-enhanced
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `instagramReelUrl` | string | ✅ | Instagram Reel URL to analyze |
-| `languageHint` | string | ❌ | Language hint for ASR (e.g., "en", "es", "fr") |
+| `languageHint` | string | ❌ | Language hint for ASR (e.g., "en", "hi", "hi-en") |
 | `cookieOptions` | object | ❌ | Cookie configuration for Instagram access |
 | `options` | object | ❌ | Feature toggles for enhanced analysis |
 | `options.includeNgrams` | boolean | ❌ | Extract n-grams and phrases (default: true) |
@@ -323,6 +323,70 @@ POST /v1/keywords/extract-enhanced
 | `options.includeIntent` | boolean | ❌ | Detect user intent (default: true) |
 | `options.includeEntities` | boolean | ❌ | Extract entities (default: true) |
 | `async` | boolean | ❌ | Process asynchronously (default: false) |
+
+### 🌍 Multilingual Support
+
+The Enhanced Keyword Extraction API now supports multiple languages with automatic language detection:
+
+#### Supported Languages
+
+- **English (`en`)**: Full support for English content
+- **Hindi (`hi`)**: Native Hindi language support with Devanagari script
+- **Hinglish (`hi-en`)**: Mixed Hindi-English content with transliterated words
+
+#### Language Detection
+
+The API automatically detects the language of your content:
+
+1. **Language Hint**: If `languageHint` is provided, it will be used directly
+2. **Auto-Detection**: If no hint is provided, the API uses advanced language detection
+3. **Hinglish Detection**: Special heuristics detect mixed Hindi-English content
+
+#### Language-Specific Features
+
+Each language includes:
+
+- **Stop Words**: Language-specific stop word filtering
+- **Sentiment Analysis**: Native sentiment lexicons for accurate emotion detection
+- **Intent Detection**: Language-appropriate intent signals and keywords
+- **Topic Classification**: Culturally relevant topic categories and keywords
+
+#### Example Usage
+
+**English Content:**
+```json
+{
+  "instagramReelUrl": "https://www.instagram.com/reel/ABC123/",
+  "languageHint": "en",
+  "options": {
+    "includeSentiment": true,
+    "includeIntent": true
+  }
+}
+```
+
+**Hindi Content:**
+```json
+{
+  "instagramReelUrl": "https://www.instagram.com/reel/ABC123/",
+  "languageHint": "hi",
+  "options": {
+    "includeSentiment": true,
+    "includeIntent": true
+  }
+}
+```
+
+**Hinglish Content (Auto-Detected):**
+```json
+{
+  "instagramReelUrl": "https://www.instagram.com/reel/ABC123/",
+  "options": {
+    "includeSentiment": true,
+    "includeIntent": true
+  }
+}
+```
 
 ### Enhanced Response Format
 
@@ -402,7 +466,9 @@ POST /v1/keywords/extract-enhanced
       "domain": "fashion",
       "targetAudience": ["young", "casual", "educational"],
       "contentStyle": "informal"
-    }
+    },
+    "detectedLanguage": "en",
+    "languageConfidence": 0.95
   },
   "searchableTerms": [
     "skincare", "routine", "beauty", "fashion", "loreal", "maybelline",
@@ -501,7 +567,14 @@ POST /v1/keywords/extract-enhanced
 - **Filler term filtering**: Removes generic terms like "thing", "stuff"
 - **Enhanced ranking**: 60 terms sorted by importance weight
 
-#### 8. Stopword Filtering
+#### 8. Multilingual Language Detection
+- **Automatic detection**: Detects language from content when no hint provided
+- **Language-specific processing**: Uses appropriate stop words, sentiment lexicons, and intent signals
+- **Hinglish support**: Special detection for mixed Hindi-English content
+- **Confidence scoring**: Provides confidence level for language detection
+- **Supported languages**: English (en), Hindi (hi), Hinglish (hi-en)
+
+#### 9. Stopword Filtering
 - **Secondary keywords**: Now properly filtered for stopwords
 - **Phrase edges**: Stopwords removed from beginning/end of phrases
 - **Enhanced quality**: Better keyword relevance and quality

@@ -6,6 +6,14 @@ import { buildTimedDoc } from './nlp';
 import { config } from '../config';
 import * as natural from 'natural';
 import Sentiment from 'sentiment';
+import { 
+  detectLanguage, 
+  getStopWords, 
+  analyzeSentimentMultilingual, 
+  detectIntentMultilingual, 
+  classifyTopicsMultilingual,
+  SupportedLanguage 
+} from './language';
 
 export interface EnhancedKeywordExtractionRequest {
   instagramReelUrl: string;
@@ -84,6 +92,8 @@ export interface EnhancedKeywordExtractionResult {
       targetAudience: string[];
       contentStyle: string;
     };
+    detectedLanguage: string;
+    languageConfidence?: number;
   };
   searchableTerms: string[];
   timings: {
@@ -132,10 +142,16 @@ export async function extractKeywordsEnhanced(request: EnhancedKeywordExtraction
     });
     timings.extract = Date.now() - extractStart;
 
-    // Step 2: Run ASR and OCR in parallel
+    // Step 2: Run ASR and OCR in parallel with error handling
     const [asr, ocr] = await Promise.all([
-      mediaData.audioPath ? callWorkerASR(mediaData.audioPath, request.languageHint) : Promise.resolve({ segments: [], timing: 0 }),
-      mediaData.frames.length > 0 ? runOCR(mediaData.frames) : Promise.resolve({ frames: [], timing: 0 })
+      mediaData.audioPath ? callWorkerASR(mediaData.audioPath, request.languageHint).catch(error => {
+        console.warn('ASR failed, continuing without transcript:', error.message);
+        return { segments: [], timing: 0, language: 'unknown' };
+      }) : Promise.resolve({ segments: [], timing: 0, language: 'unknown' }),
+      mediaData.frames.length > 0 ? runOCR(mediaData.frames).catch(error => {
+        console.warn('OCR failed, continuing without text extraction:', error.message);
+        return { frames: [], timing: 0 };
+      }) : Promise.resolve({ frames: [], timing: 0 })
     ]);
 
     timings.asr = asr.timing;
@@ -148,13 +164,18 @@ export async function extractKeywordsEnhanced(request: EnhancedKeywordExtraction
       ocr,
     });
 
+    // Step 3.5: Detect language - use language hint first, then ASR result, then auto-detect
+    const detectedLanguage = request.languageHint || asr.language || 'unknown';
+    const languageDetection = detectLanguage(doc.fullText, detectedLanguage);
+
     // Step 4: Extract enhanced keywords
     const processingStart = Date.now();
-    const enhancedKeywords = await extractEnhancedKeywordsFromText(
+    const enhancedKeywords = await extractEnhancedKeywordsFromTextMultilingual(
       doc.fullText, 
       mediaData.caption || '', 
       extractOCRText(ocr),
-      request.options || {}
+      request.options || {},
+      languageDetection.language
     );
     timings.processing = Date.now() - processingStart;
 
@@ -175,6 +196,8 @@ export async function extractKeywordsEnhanced(request: EnhancedKeywordExtraction
         username: extractUsername(mediaData.caption || null),
         complexity: enhancedKeywords.complexity,
         context: enhancedKeywords.context,
+        detectedLanguage: languageDetection.language,
+        languageConfidence: languageDetection.confidence,
       },
       searchableTerms,
       timings: {
@@ -258,6 +281,90 @@ async function extractEnhancedKeywordsFromText(
   const complexity = analyzeComplexity(combinedText);
 
   // Content context analysis
+  const context = analyzeContentContext(combinedText, topics);
+
+  return {
+    keywords: {
+      primary: primaryKeywords,
+      secondary: secondaryKeywords,
+      phrases,
+      hashtags,
+      mentions,
+    },
+    topics,
+    sentiment,
+    intent,
+    entities,
+    complexity,
+    context,
+  };
+}
+
+/**
+ * Extract enhanced keywords with multilingual semantic analysis
+ */
+async function extractEnhancedKeywordsFromTextMultilingual(
+  fullText: string, 
+  caption: string, 
+  ocrText: string | null,
+  options: EnhancedKeywordExtractionRequest['options'],
+  language: SupportedLanguage
+): Promise<{
+  keywords: EnhancedKeywordExtractionResult['keywords'];
+  topics: EnhancedKeywordExtractionResult['topics'];
+  sentiment: EnhancedKeywordExtractionResult['sentiment'];
+  intent: EnhancedKeywordExtractionResult['intent'];
+  entities: EnhancedKeywordExtractionResult['entities'];
+  complexity: 'simple' | 'moderate' | 'complex';
+  context: {
+    domain: string;
+    targetAudience: string[];
+    contentStyle: string;
+  };
+}> {
+  const text = fullText.toLowerCase();
+  const captionText = caption.toLowerCase();
+  const combinedText = [fullText, caption, ocrText].filter(Boolean).join(' ');
+
+  // Extract basic elements
+  const hashtags = extractHashtags(caption);
+  const mentions = extractMentions(caption);
+
+  // Enhanced keyword extraction with language-specific stop words
+  const primaryKeywords = options?.includeNgrams !== false 
+    ? extractPrimaryKeywordsWithPhrasesMultilingual(text, captionText, language)
+    : extractPrimaryKeywordsBasicMultilingual(text, captionText, language);
+
+  const secondaryKeywords = extractSecondaryKeywordsMultilingual(text, primaryKeywords.map(k => k.term), language);
+
+  const phrases = options?.includeNgrams !== false 
+    ? extractNgrams(combinedText)
+    : [];
+
+  // Topic classification with confidence using language-specific keywords
+  const topics = options?.includeIntent !== false 
+    ? classifyTopicsMultilingual(combinedText, language)
+    : { primary: { category: 'unknown', subcategory: null, confidence: 0 }, secondary: [] };
+
+  // Sentiment analysis using language-specific lexicons
+  const sentiment = options?.includeSentiment !== false 
+    ? analyzeSentimentMultilingual(combinedText, caption, language)
+    : { overall: 'neutral' as const, score: 0, comparative: 0, emotions: [] };
+
+  // Intent detection using language-specific signals
+  const intent = options?.includeIntent !== false 
+    ? detectIntentMultilingual(combinedText, caption, language)
+    : { primary: 'unknown' as const, secondary: [], confidence: 0 };
+
+  // Entity extraction (keep existing logic for now)
+  const entities = options?.includeEntities !== false
+    ? extractEntities(combinedText, caption, ocrText)
+    : { brands: [], products: [], people: [], prices: [], locations: [], events: [], dates: [], measurements: [], currencies: [] };
+
+  // Analyze complexity
+  const complexity = analyzeComplexity(combinedText);
+
+  // Analyze context
   const context = analyzeContentContext(combinedText, topics);
 
   return {
@@ -424,6 +531,121 @@ function extractSecondaryKeywords(text: string, primary: string[]): string[] {
   return Array.from(wordFreq.entries())
     .sort((a, b) => b[1] - a[1])
     .slice(0, 20) // Increased from 15 to 20
+    .map(([word]) => word);
+}
+
+/**
+ * Extract primary keywords with phrases (multilingual version)
+ */
+function extractPrimaryKeywordsWithPhrasesMultilingual(
+  text: string, 
+  caption: string, 
+  language: SupportedLanguage
+): Array<{ term: string; confidence: number; type: 'single' | 'phrase' }> {
+  const stopWords = getStopWords(language);
+
+  // Extract single words
+  const words = text.split(/\W+/)
+    .filter(word => word.length > 2 && !stopWords.has(word.toLowerCase()))
+    .map(word => word.toLowerCase());
+
+  const wordFreq = new Map<string, number>();
+  words.forEach(word => {
+    wordFreq.set(word, (wordFreq.get(word) || 0) + 1);
+  });
+
+  // Extract phrases (bigrams and trigrams)
+  const phrases = extractNgrams(text);
+  
+  // Combine and score with enhanced multi-factor scoring
+  const captionWords = new Set(caption.split(/\W+/).map(w => w.toLowerCase()));
+  
+  const allTerms = [
+    ...Array.from(wordFreq.entries()).map(([word, freq]) => {
+      const frequencyScore = freq / words.length;
+      const positionWeight = calculatePositionWeight(word, text, caption);
+      const contextScore = calculateContextScore(word, text);
+      
+      return {
+        term: word,
+        confidence: (frequencyScore * 0.4) + (positionWeight * 0.4) + (contextScore * 0.2),
+        type: 'single' as const
+      };
+    }),
+    ...phrases.slice(0, 5).map(phrase => ({
+      term: phrase.text,
+      confidence: phrase.significance,
+      type: 'phrase' as const
+    }))
+  ];
+
+  return allTerms
+    .sort((a, b) => b.confidence - a.confidence)
+    .slice(0, 15);
+}
+
+/**
+ * Extract primary keywords (basic multilingual version)
+ */
+function extractPrimaryKeywordsBasicMultilingual(
+  text: string, 
+  caption: string, 
+  language: SupportedLanguage
+): Array<{ term: string; confidence: number; type: 'single' | 'phrase' }> {
+  const stopWords = getStopWords(language);
+
+  const words = text.split(/\W+/)
+    .filter(word => word.length > 2 && !stopWords.has(word.toLowerCase()))
+    .map(word => word.toLowerCase());
+
+  const wordFreq = new Map<string, number>();
+  words.forEach(word => {
+    wordFreq.set(word, (wordFreq.get(word) || 0) + 1);
+  });
+
+  const captionWords = new Set(caption.split(/\W+/).map(w => w.toLowerCase()));
+  
+  return Array.from(wordFreq.entries())
+    .sort((a, b) => {
+      const aInCaption = captionWords.has(a[0]) ? 1 : 0;
+      const bInCaption = captionWords.has(b[0]) ? 1 : 0;
+      
+      if (aInCaption !== bInCaption) {
+        return bInCaption - aInCaption;
+      }
+      return b[1] - a[1];
+    })
+    .slice(0, 10)
+    .map(([word, freq]) => ({
+      term: word,
+      confidence: freq / words.length + (captionWords.has(word) ? 0.3 : 0),
+      type: 'single' as const
+    }));
+}
+
+/**
+ * Extract secondary keywords (multilingual version)
+ */
+function extractSecondaryKeywordsMultilingual(
+  text: string, 
+  primary: string[], 
+  language: SupportedLanguage
+): string[] {
+  const primarySet = new Set(primary);
+  const stopWords = getStopWords(language);
+  
+  const words = text.split(/\W+/)
+    .filter(word => word.length > 2 && !primarySet.has(word.toLowerCase()) && !stopWords.has(word.toLowerCase()))
+    .map(word => word.toLowerCase());
+
+  const wordFreq = new Map<string, number>();
+  words.forEach(word => {
+    wordFreq.set(word, (wordFreq.get(word) || 0) + 1);
+  });
+
+  return Array.from(wordFreq.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 20)
     .map(([word]) => word);
 }
 
