@@ -278,6 +278,240 @@ To add new keyword extraction features:
 3. **Add new metadata fields** in the response interface
 4. **Update tests** in the test script
 
+## 🚀 Enhanced Keyword Extraction API
+
+### Overview
+
+The Enhanced Keyword Extraction API provides advanced semantic analysis capabilities beyond the basic keyword extraction. It includes n-gram extraction, sentiment analysis, intent detection, entity extraction, and confidence-scored topic classification.
+
+### Endpoint
+
+```
+POST /v1/keywords/extract-enhanced
+```
+
+### Request Body
+
+```json
+{
+  "instagramReelUrl": "https://www.instagram.com/reel/ABC123DEF456/",
+  "languageHint": "en",
+  "cookieOptions": {
+    "browserCookies": "chrome",
+    "cookiesFile": "/path/to/cookies.txt"
+  },
+  "options": {
+    "includeNgrams": true,
+    "includeSentiment": true,
+    "includeIntent": true,
+    "includeEntities": true
+  },
+  "async": false
+}
+```
+
+### Enhanced Request Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `instagramReelUrl` | string | ✅ | Instagram Reel URL to analyze |
+| `languageHint` | string | ❌ | Language hint for ASR (e.g., "en", "es", "fr") |
+| `cookieOptions` | object | ❌ | Cookie configuration for Instagram access |
+| `options` | object | ❌ | Feature toggles for enhanced analysis |
+| `options.includeNgrams` | boolean | ❌ | Extract n-grams and phrases (default: true) |
+| `options.includeSentiment` | boolean | ❌ | Perform sentiment analysis (default: true) |
+| `options.includeIntent` | boolean | ❌ | Detect user intent (default: true) |
+| `options.includeEntities` | boolean | ❌ | Extract entities (default: true) |
+| `async` | boolean | ❌ | Process asynchronously (default: false) |
+
+### Enhanced Response Format
+
+```json
+{
+  "keywords": {
+    "primary": [
+      {
+        "term": "skincare routine",
+        "confidence": 0.95,
+        "type": "phrase"
+      },
+      {
+        "term": "beauty",
+        "confidence": 0.88,
+        "type": "single"
+      }
+    ],
+    "secondary": ["skincare", "beauty", "skin", "care"],
+    "phrases": [
+      {
+        "text": "skincare routine",
+        "frequency": 3,
+        "significance": 0.8
+      }
+    ],
+    "hashtags": ["#skincare", "#beauty", "#routine"],
+    "mentions": ["@beautyexpert"]
+  },
+  "topics": {
+    "primary": {
+      "category": "fashion",
+      "subcategory": "skincare",
+      "confidence": 0.92
+    },
+    "secondary": [
+      {
+        "category": "beauty",
+        "confidence": 0.85
+      }
+    ]
+  },
+  "sentiment": {
+    "overall": "positive",
+    "score": 3.2,
+    "comparative": 0.8,
+    "emotions": ["excitement", "curiosity"]
+  },
+  "intent": {
+    "primary": "educate",
+    "secondary": ["inform", "inspire"],
+    "confidence": 0.9
+  },
+  "entities": {
+    "brands": ["Nike", "Apple"],
+    "products": ["cleanser", "moisturizer"],
+    "people": ["influencer", "expert"],
+    "prices": ["$50", "$25"],
+    "locations": ["New York", "Los Angeles"]
+  },
+  "metadata": {
+    "caption": "Amazing skincare routine! #skincare #beauty",
+    "transcript": "This is an amazing skincare routine for beginners",
+    "ocrText": "Brand Name - $50",
+    "duration": 30,
+    "username": "beautyexpert",
+    "complexity": "moderate"
+  },
+  "searchableTerms": [
+    "skincare", "routine", "beauty", "fashion", "skincare", "beauty",
+    "video", "reel", "instagram", "social", "content", "viral", "trending"
+  ],
+  "timings": {
+    "totalMs": 3500,
+    "stages": {
+      "extract": 800,
+      "asr": 1200,
+      "ocr": 300,
+      "processing": 200,
+      "enhancement": 1000
+    }
+  }
+}
+```
+
+### Enhanced Features
+
+#### 1. N-gram and Phrase Extraction
+- Extracts meaningful multi-word phrases
+- Scores phrases by frequency and significance
+- Supports bigrams and trigrams
+
+#### 2. Sentiment Analysis
+- Overall sentiment: positive, negative, neutral
+- Sentiment score: -5 to 5 scale
+- Emotion detection: excitement, curiosity, frustration, etc.
+
+#### 3. Intent Detection
+- Primary intent: educate, entertain, promote, inspire, inform
+- Secondary intents with confidence scores
+- Pattern-based detection with keyword matching
+
+#### 4. Entity Extraction
+- **Brands**: Company names and organizations
+- **Products**: Product categories and names
+- **People**: Person names and influencers
+- **Prices**: Monetary values and price points
+- **Locations**: Geographic locations and places
+
+#### 5. Topic Classification with Confidence
+- Primary topic with subcategory
+- Confidence scores for topic relevance
+- Secondary topics with relevance scores
+- Support for hierarchical topic structure
+
+#### 6. Content Complexity Analysis
+- **Simple**: Basic vocabulary, short sentences
+- **Moderate**: Intermediate complexity
+- **Complex**: Technical terms, long sentences, advanced concepts
+
+### Use Cases
+
+#### Content Recommendation
+- Match user queries with semantically similar content
+- Understand content intent for better categorization
+- Analyze sentiment for appropriate content filtering
+
+#### SEO and Marketing
+- Extract meaningful phrases for better search optimization
+- Understand content sentiment for brand alignment
+- Identify entities for targeted marketing
+
+#### Content Moderation
+- Detect inappropriate sentiment or intent
+- Classify content topics for filtering
+- Analyze content complexity for audience targeting
+
+### Performance Considerations
+
+- **Processing time**: 3-8 seconds (vs 2-5 for basic)
+- **Memory usage**: Higher due to NLP libraries
+- **Accuracy**: Significantly improved semantic understanding
+- **Scalability**: Consider async processing for high volume
+
+### When to Use Enhanced vs Basic
+
+**Use Enhanced when:**
+- Building recommendation systems
+- Need semantic understanding
+- Require sentiment analysis
+- Want entity extraction
+- Building LLM training data
+
+**Use Basic when:**
+- Simple keyword extraction is sufficient
+- Performance is critical
+- Processing high volume with minimal latency
+- Basic search functionality
+
+### Error Handling
+
+Enhanced endpoint uses the same error codes as the basic endpoint:
+
+| Code | HTTP Status | Description |
+|------|-------------|-------------|
+| `VALIDATION_ERROR` | 400 | Invalid request data or URL format |
+| `INSTAGRAM_DOWNLOAD_FAILED` | 500 | Failed to download Instagram Reel |
+| `ASR_PROCESSING_FAILED` | 500 | Speech-to-text processing failed |
+| `OCR_PROCESSING_FAILED` | 500 | Text extraction from images failed |
+| `RATE_LIMIT_EXCEEDED` | 429 | Too many requests |
+
+### Testing Enhanced Endpoint
+
+```bash
+curl -X POST http://localhost:3000/v1/keywords/extract-enhanced \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <your-jwt-token>" \
+  -d '{
+    "instagramReelUrl": "https://www.instagram.com/reel/ABC123DEF456/",
+    "languageHint": "en",
+    "options": {
+      "includeNgrams": true,
+      "includeSentiment": true,
+      "includeIntent": true,
+      "includeEntities": true
+    }
+  }'
+```
+
 ## 📄 License
 
 MIT License - see LICENSE file for details.

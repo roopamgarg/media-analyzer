@@ -49,6 +49,10 @@ jest.mock('../services/keyword-extractor', () => ({
   extractKeywords: jest.fn(),
 }));
 
+jest.mock('../services/keyword-extractor-enhanced', () => ({
+  extractKeywordsEnhanced: jest.fn(),
+}));
+
 jest.mock('../services/worker', () => ({
   callWorkerASR: jest.fn(),
 }));
@@ -303,6 +307,99 @@ export const createTestServer = async (): Promise<TestFastifyInstance> => {
         return Promise.resolve({
           statusCode: 200,
           payload: JSON.stringify(createMockKeywordResult()),
+          headers: {},
+        });
+      }
+      
+      if (url === '/v1/keywords/extract-enhanced') {
+        const body = options.payload || {};
+        
+        // Check for missing authorization
+        const authHeader = options.headers?.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+          return Promise.resolve({
+            statusCode: 401,
+            payload: JSON.stringify({
+              code: 'UNAUTHORIZED',
+              message: 'Missing authorization token'
+            }),
+            headers: {},
+          });
+        }
+        
+        // Check for validation errors
+        if (!body.instagramReelUrl) {
+          return Promise.resolve({
+            statusCode: 400,
+            payload: JSON.stringify({
+              code: 'VALIDATION_ERROR',
+              message: 'Invalid request data',
+              details: [{ path: ['instagramReelUrl'], message: 'Required' }]
+            }),
+            headers: {},
+          });
+        }
+        
+        // Check for invalid Instagram URL
+        if (body.instagramReelUrl && !body.instagramReelUrl.includes('instagram.com')) {
+          return Promise.resolve({
+            statusCode: 400,
+            payload: JSON.stringify({
+              code: 'VALIDATION_ERROR',
+              message: 'Invalid request data',
+              details: [{ path: ['instagramReelUrl'], message: 'Must be a valid Instagram Reel URL' }]
+            }),
+            headers: {},
+          });
+        }
+        
+        // Check for invalid browser type
+        if (body.cookieOptions?.browserCookies && 
+            !['chrome', 'firefox', 'safari', 'edge', 'opera', 'brave'].includes(body.cookieOptions.browserCookies)) {
+          return Promise.resolve({
+            statusCode: 400,
+            payload: JSON.stringify({
+              code: 'VALIDATION_ERROR',
+              message: 'Invalid request data',
+              details: [{ path: ['cookieOptions', 'browserCookies'], message: 'Invalid enum value' }]
+            }),
+            headers: {},
+          });
+        }
+        
+        // Check for error cases
+        if (body.instagramReelUrl === 'https://www.instagram.com/reel/ERROR/') {
+          return Promise.resolve({
+            statusCode: 500,
+            payload: JSON.stringify({
+              code: 'INTERNAL_ERROR',
+              message: 'Enhanced keyword extraction failed',
+              details: 'Mock extraction error'
+            }),
+            headers: {},
+          });
+        }
+        
+        if (body.instagramReelUrl === 'https://www.instagram.com/reel/UNKNOWN_ERROR/') {
+          return Promise.resolve({
+            statusCode: 500,
+            payload: JSON.stringify({
+              code: 'INTERNAL_ERROR',
+              message: 'Enhanced keyword extraction failed',
+              details: 'Unknown error'
+            }),
+            headers: {},
+          });
+        }
+        
+        // Mock service call
+        const { extractKeywordsEnhanced } = require('../services/keyword-extractor-enhanced');
+        const mockResult = createMockEnhancedKeywordResult();
+        extractKeywordsEnhanced.mockResolvedValue(mockResult);
+        
+        return Promise.resolve({
+          statusCode: 200,
+          payload: JSON.stringify(mockResult),
           headers: {},
         });
       }
@@ -702,6 +799,63 @@ export const createMockKeywordResult = (overrides = {}) => ({
       ocr: 1000,
       processing: 500,
     },
+  },
+  ...overrides,
+});
+
+export const createMockEnhancedKeywordResult = (overrides = {}) => ({
+  keywords: {
+    primary: [
+      { term: 'skincare', confidence: 0.95, type: 'single' as const },
+      { term: 'routine', confidence: 0.88, type: 'single' as const }
+    ],
+    secondary: ['beauty', 'skin', 'care'],
+    phrases: [
+      { text: 'skincare routine', frequency: 2, significance: 0.8 }
+    ],
+    hashtags: ['#skincare', '#beauty'],
+    mentions: ['@brand']
+  },
+  topics: {
+    primary: { category: 'fashion', subcategory: 'skincare', confidence: 0.92 },
+    secondary: [{ category: 'beauty', confidence: 0.85 }]
+  },
+  sentiment: {
+    overall: 'positive' as const,
+    score: 3.2,
+    comparative: 0.8,
+    emotions: ['excitement']
+  },
+  intent: {
+    primary: 'educate' as const,
+    secondary: ['inform'],
+    confidence: 0.9
+  },
+  entities: {
+    brands: ['nike'],
+    products: ['cleanser'],
+    people: ['influencer'],
+    prices: ['$50'],
+    locations: ['New York']
+  },
+  metadata: {
+    caption: 'Amazing skincare routine!',
+    transcript: 'This is an amazing skincare routine',
+    ocrText: 'Brand Name',
+    duration: 30,
+    username: 'beautyexpert',
+    complexity: 'moderate' as const
+  },
+  searchableTerms: ['skincare', 'routine', 'beauty', 'fashion'],
+  timings: {
+    totalMs: 2500,
+    stages: {
+      extract: 800,
+      asr: 1200,
+      ocr: 300,
+      processing: 200,
+      enhancement: 200
+    }
   },
   ...overrides,
 });

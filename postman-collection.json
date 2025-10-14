@@ -487,6 +487,168 @@
       }
     },
     {
+      "name": "Extract Enhanced Keywords (Basic)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"instagramReelUrl\": \"{{instagram_reel_url}}\",\n  \"languageHint\": \"en\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/v1/keywords/extract-enhanced",
+          "host": ["{{base_url}}"],
+          "path": ["v1", "keywords", "extract-enhanced"]
+        }
+      }
+    },
+    {
+      "name": "Extract Enhanced Keywords (with Options)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"instagramReelUrl\": \"{{instagram_reel_url}}\",\n  \"languageHint\": \"en\",\n  \"options\": {\n    \"includeNgrams\": true,\n    \"includeSentiment\": true,\n    \"includeIntent\": true,\n    \"includeEntities\": true\n  }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/v1/keywords/extract-enhanced",
+          "host": ["{{base_url}}"],
+          "path": ["v1", "keywords", "extract-enhanced"]
+        }
+      }
+    },
+    {
+      "name": "Extract Enhanced Keywords (with Chrome Cookies)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"instagramReelUrl\": \"{{instagram_reel_url}}\",\n  \"languageHint\": \"en\",\n  \"cookieOptions\": {\n    \"browserCookies\": \"chrome\"\n  },\n  \"options\": {\n    \"includeNgrams\": true,\n    \"includeSentiment\": true,\n    \"includeIntent\": true,\n    \"includeEntities\": true\n  }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/v1/keywords/extract-enhanced",
+          "host": ["{{base_url}}"],
+          "path": ["v1", "keywords", "extract-enhanced"]
+        }
+      }
+    },
+    {
+      "name": "Extract Enhanced Keywords (with Cookies File)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"instagramReelUrl\": \"{{instagram_reel_url}}\",\n  \"languageHint\": \"en\",\n  \"cookieOptions\": {\n    \"cookiesFile\": \"{{cookies_file_path}}\"\n  },\n  \"options\": {\n    \"includeNgrams\": true,\n    \"includeSentiment\": true,\n    \"includeIntent\": true,\n    \"includeEntities\": true\n  }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/v1/keywords/extract-enhanced",
+          "host": ["{{base_url}}"],
+          "path": ["v1", "keywords", "extract-enhanced"]
+        }
+      }
+    },
+    {
+      "name": "Extract Enhanced Keywords (Minimal Options)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"instagramReelUrl\": \"{{instagram_reel_url}}\",\n  \"languageHint\": \"en\",\n  \"options\": {\n    \"includeNgrams\": false,\n    \"includeSentiment\": false,\n    \"includeIntent\": false,\n    \"includeEntities\": false\n  }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/v1/keywords/extract-enhanced",
+          "host": ["{{base_url}}"],
+          "path": ["v1", "keywords", "extract-enhanced"]
+        }
+      }
+    },
+    {
+      "name": "Extract Enhanced Keywords (Async Mode)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"instagramReelUrl\": \"{{instagram_reel_url}}\",\n  \"languageHint\": \"en\",\n  \"async\": true,\n  \"options\": {\n    \"includeNgrams\": true,\n    \"includeSentiment\": true,\n    \"includeIntent\": true,\n    \"includeEntities\": true\n  }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/v1/keywords/extract-enhanced",
+          "host": ["{{base_url}}"],
+          "path": ["v1", "keywords", "extract-enhanced"]
+        }
+      }
+    },
+    {
       "name": "Keywords Health Check",
       "request": {
         "method": "GET",

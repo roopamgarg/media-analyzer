@@ -114,3 +114,4 @@ venv.bak/
 # Prisma
 prisma/migrations/
 .turbo/
+.cursor/

@@ -1,16 +1,18 @@
-import { createTestServer, createMockUser, createMockAnalysis, createMockAnalysisResult, createMockKeywordResult } from '../setup';
+import { createTestServer, createMockUser, createMockAnalysis, createMockAnalysisResult, createMockKeywordResult, createMockEnhancedKeywordResult } from '../setup';
 
 // Import the test type
 type TestFastifyInstance = Awaited<ReturnType<typeof createTestServer>>;
 import { canRunSync, prepareContext, runSyncAnalysis } from '../../services/analyze-sync';
 import { enqueueAnalysisJob } from '../../services/queue';
 import { extractKeywords } from '../../services/keyword-extractor';
+import { extractKeywordsEnhanced } from '../../services/keyword-extractor-enhanced';
 import { prisma } from '@media-analyzer/lib-node';
 
 // Mock the services
 jest.mock('../../services/analyze-sync');
 jest.mock('../../services/queue');
 jest.mock('../../services/keyword-extractor');
+jest.mock('../../services/keyword-extractor-enhanced');
 jest.mock('@media-analyzer/lib-node');
 
 const mockCanRunSync = canRunSync as jest.MockedFunction<typeof canRunSync>;
@@ -18,6 +20,7 @@ const mockPrepareContext = prepareContext as jest.MockedFunction<typeof prepareC
 const mockRunSyncAnalysis = runSyncAnalysis as jest.MockedFunction<typeof runSyncAnalysis>;
 const mockEnqueueAnalysisJob = enqueueAnalysisJob as jest.MockedFunction<typeof enqueueAnalysisJob>;
 const mockExtractKeywords = extractKeywords as jest.MockedFunction<typeof extractKeywords>;
+const mockExtractKeywordsEnhanced = extractKeywordsEnhanced as jest.MockedFunction<typeof extractKeywordsEnhanced>;
 const mockPrisma = prisma as jest.Mocked<typeof prisma>;
 
 describe('API Integration Tests', () => {
@@ -234,6 +237,167 @@ describe('API Integration Tests', () => {
       });
 
       expect(keywordResponse.statusCode).toBe(200);
+    });
+  });
+
+  describe('Enhanced Keyword Extraction Workflow', () => {
+    it('should complete enhanced keyword extraction workflow', async () => {
+      // Step 1: Authenticate
+      const authResponse = await server.inject({
+        method: 'POST',
+        url: '/auth/demo-token',
+      });
+      const { token } = JSON.parse(authResponse.payload);
+
+      // Step 2: Extract enhanced keywords
+      const mockEnhancedResult = createMockEnhancedKeywordResult();
+      mockExtractKeywordsEnhanced.mockResolvedValue(mockEnhancedResult);
+
+      const enhancedKeywordRequest = {
+        instagramReelUrl: 'https://www.instagram.com/reel/ABC123/',
+        languageHint: 'en',
+        options: {
+          includeNgrams: true,
+          includeSentiment: true,
+          includeIntent: true,
+          includeEntities: true,
+        },
+        cookieOptions: {
+          browserCookies: 'chrome',
+        },
+      };
+
+      const enhancedKeywordResponse = await server.inject({
+        method: 'POST',
+        url: '/v1/keywords/extract-enhanced',
+        payload: enhancedKeywordRequest,
+        headers: { authorization: `Bearer ${token}` },
+      });
+
+      expect(enhancedKeywordResponse.statusCode).toBe(200);
+      const enhancedKeywordResult = JSON.parse(enhancedKeywordResponse.payload);
+      
+      // Verify enhanced response structure
+      expect(enhancedKeywordResult.keywords).toBeDefined();
+      expect(enhancedKeywordResult.keywords.primary).toBeDefined();
+      expect(enhancedKeywordResult.keywords.phrases).toBeDefined();
+      expect(enhancedKeywordResult.topics).toBeDefined();
+      expect(enhancedKeywordResult.sentiment).toBeDefined();
+      expect(enhancedKeywordResult.intent).toBeDefined();
+      expect(enhancedKeywordResult.entities).toBeDefined();
+      expect(enhancedKeywordResult.metadata).toBeDefined();
+      expect(enhancedKeywordResult.searchableTerms).toBeDefined();
+      expect(enhancedKeywordResult.timings).toBeDefined();
+      
+      // Verify enhanced features
+      expect(enhancedKeywordResult.sentiment.overall).toBeDefined();
+      expect(enhancedKeywordResult.sentiment.score).toBeDefined();
+      expect(enhancedKeywordResult.intent.primary).toBeDefined();
+      expect(enhancedKeywordResult.entities.brands).toBeDefined();
+      expect(enhancedKeywordResult.entities.products).toBeDefined();
+      expect(enhancedKeywordResult.entities.people).toBeDefined();
+      expect(enhancedKeywordResult.topics.primary.category).toBeDefined();
+    });
+
+    it('should handle enhanced keyword extraction with minimal options', async () => {
+      const authResponse = await server.inject({
+        method: 'POST',
+        url: '/auth/demo-token',
+      });
+      const { token } = JSON.parse(authResponse.payload);
+
+      const mockEnhancedResult = createMockEnhancedKeywordResult();
+      mockExtractKeywordsEnhanced.mockResolvedValue(mockEnhancedResult);
+
+      const minimalRequest = {
+        instagramReelUrl: 'https://www.instagram.com/reel/ABC123/',
+        languageHint: 'en',
+        options: {
+          includeNgrams: false,
+          includeSentiment: false,
+          includeIntent: false,
+          includeEntities: false,
+        },
+      };
+
+      const response = await server.inject({
+        method: 'POST',
+        url: '/v1/keywords/extract-enhanced',
+        payload: minimalRequest,
+        headers: { authorization: `Bearer ${token}` },
+      });
+
+      expect(response.statusCode).toBe(200);
+      const result = JSON.parse(response.payload);
+      expect(result.keywords).toBeDefined();
+      expect(result.metadata).toBeDefined();
+    });
+
+    it('should handle enhanced keyword extraction with cookies file', async () => {
+      const authResponse = await server.inject({
+        method: 'POST',
+        url: '/auth/demo-token',
+      });
+      const { token } = JSON.parse(authResponse.payload);
+
+      const mockEnhancedResult = createMockEnhancedKeywordResult();
+      mockExtractKeywordsEnhanced.mockResolvedValue(mockEnhancedResult);
+
+      const requestWithCookieFile = {
+        instagramReelUrl: 'https://www.instagram.com/reel/ABC123/',
+        languageHint: 'en',
+        cookieOptions: {
+          cookiesFile: '/path/to/cookies.txt',
+        },
+        options: {
+          includeNgrams: true,
+          includeSentiment: true,
+          includeIntent: true,
+          includeEntities: true,
+        },
+      };
+
+      const response = await server.inject({
+        method: 'POST',
+        url: '/v1/keywords/extract-enhanced',
+        payload: requestWithCookieFile,
+        headers: { authorization: `Bearer ${token}` },
+      });
+
+      expect(response.statusCode).toBe(200);
+      const result = JSON.parse(response.payload);
+      expect(result.keywords).toBeDefined();
+      expect(result.sentiment).toBeDefined();
+      expect(result.intent).toBeDefined();
+      expect(result.entities).toBeDefined();
+    });
+
+    it('should handle enhanced keyword extraction errors', async () => {
+      const authResponse = await server.inject({
+        method: 'POST',
+        url: '/auth/demo-token',
+      });
+      const { token } = JSON.parse(authResponse.payload);
+
+      // Mock service to throw error
+      mockExtractKeywordsEnhanced.mockRejectedValue(new Error('Enhanced extraction failed'));
+
+      const errorRequest = {
+        instagramReelUrl: 'https://www.instagram.com/reel/ERROR/',
+        languageHint: 'en',
+      };
+
+      const response = await server.inject({
+        method: 'POST',
+        url: '/v1/keywords/extract-enhanced',
+        payload: errorRequest,
+        headers: { authorization: `Bearer ${token}` },
+      });
+
+      expect(response.statusCode).toBe(500);
+      const result = JSON.parse(response.payload);
+      expect(result.code).toBe('INTERNAL_ERROR');
+      expect(result.message).toBe('Enhanced keyword extraction failed');
     });
   });
 
