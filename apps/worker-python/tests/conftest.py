@@ -33,13 +33,17 @@ def client():
 def mock_whisper_model():
     """Mock Whisper model for testing."""
     with patch('main.get_whisper_model') as mock_model:
-        mock_segments = [
-            Mock(start=0.0, end=2.5, text="Hello world"),
-            Mock(start=2.5, end=5.0, text="This is a test")
-        ]
-        mock_info = Mock(language="en")
+        def mock_transcribe(audio, language=None, **kwargs):
+            mock_segments = [
+                Mock(start=0.0, end=2.5, text="Hello world"),
+                Mock(start=2.5, end=5.0, text="This is a test")
+            ]
+            # Return the requested language or default to "en"
+            detected_language = language if language else "en"
+            mock_info = Mock(language=detected_language)
+            return (mock_segments, mock_info)
         
-        mock_model.return_value.transcribe.return_value = (mock_segments, mock_info)
+        mock_model.return_value.transcribe = mock_transcribe
         yield mock_model
 
 @pytest.fixture
@@ -222,4 +226,91 @@ def ocr_test_data():
             }
         ],
         "timing": 800.0
+    }
+
+
+@pytest.fixture
+def multilingual_audio_data():
+    """Create multilingual audio data for testing."""
+    # Generate audio with different characteristics for different languages
+    duration = 2.0  # 2 seconds
+    sample_rate = 16000
+    
+    # Create a more complex audio signal
+    t = np.linspace(0, duration, int(sample_rate * duration), False)
+    audio = np.sin(2 * np.pi * 440 * t) + 0.5 * np.sin(2 * np.pi * 880 * t)
+    audio = audio.astype(np.float32)
+    
+    # Convert to WAV bytes
+    buffer = io.BytesIO()
+    sf.write(buffer, audio, sample_rate, format='WAV', subtype='PCM_16')
+    return buffer.getvalue()
+
+
+@pytest.fixture
+def multilingual_segments():
+    """Create multilingual transcript segments for testing."""
+    return {
+        "en": [
+            {"tStart": 0.0, "tEnd": 2.5, "text": "Hello world"},
+            {"tStart": 2.5, "tEnd": 5.0, "text": "This is a test"}
+        ],
+        "hi": [
+            {"tStart": 0.0, "tEnd": 2.5, "text": "नमस्ते दुनिया"},
+            {"tStart": 2.5, "tEnd": 5.0, "text": "यह एक परीक्षण है"}
+        ],
+        "es": [
+            {"tStart": 0.0, "tEnd": 2.5, "text": "Hola mundo"},
+            {"tStart": 2.5, "tEnd": 5.0, "text": "Esta es una prueba"}
+        ],
+        "fr": [
+            {"tStart": 0.0, "tEnd": 2.5, "text": "Bonjour le monde"},
+            {"tStart": 2.5, "tEnd": 5.0, "text": "Ceci est un test"}
+        ],
+        "de": [
+            {"tStart": 0.0, "tEnd": 2.5, "text": "Hallo Welt"},
+            {"tStart": 2.5, "tEnd": 5.0, "text": "Das ist ein Test"}
+        ],
+        "ta": [
+            {"tStart": 0.0, "tEnd": 2.5, "text": "வணக்கம் உலகம்"},
+            {"tStart": 2.5, "tEnd": 5.0, "text": "இது ஒரு சோதனை"}
+        ],
+        "te": [
+            {"tStart": 0.0, "tEnd": 2.5, "text": "హలో వరల్డ్"},
+            {"tStart": 2.5, "tEnd": 5.0, "text": "ఇది ఒక పరీక్ష"}
+        ],
+        "bn": [
+            {"tStart": 0.0, "tEnd": 2.5, "text": "হ্যালো বিশ্ব"},
+            {"tStart": 2.5, "tEnd": 5.0, "text": "এটি একটি পরীক্ষা"}
+        ],
+        "zh": [
+            {"tStart": 0.0, "tEnd": 2.5, "text": "你好世界"},
+            {"tStart": 2.5, "tEnd": 5.0, "text": "这是一个测试"}
+        ],
+        "ja": [
+            {"tStart": 0.0, "tEnd": 2.5, "text": "こんにちは世界"},
+            {"tStart": 2.5, "tEnd": 5.0, "text": "これはテストです"}
+        ],
+        "ko": [
+            {"tStart": 0.0, "tEnd": 2.5, "text": "안녕하세요 세계"},
+            {"tStart": 2.5, "tEnd": 5.0, "text": "이것은 테스트입니다"}
+        ]
+    }
+
+
+@pytest.fixture
+def multilingual_text_samples():
+    """Create multilingual text samples for testing."""
+    return {
+        "en": "Hello world, this is a test. How are you today?",
+        "hi": "नमस्ते दुनिया, यह एक परीक्षण है। आज आप कैसे हैं?",
+        "es": "Hola mundo, esta es una prueba. ¿Cómo estás hoy?",
+        "fr": "Bonjour le monde, ceci est un test. Comment allez-vous aujourd'hui?",
+        "de": "Hallo Welt, das ist ein Test. Wie geht es dir heute?",
+        "ta": "வணக்கம் உலகம், இது ஒரு சோதனை. இன்று நீங்கள் எப்படி இருக்கிறீர்கள்?",
+        "te": "హలో వరల్డ్, ఇది ఒక పరీక్ష. ఈరోజు మీరు ఎలా ఉన్నారు?",
+        "bn": "হ্যালো বিশ্ব, এটি একটি পরীক্ষা। আজ আপনি কেমন আছেন?",
+        "zh": "你好世界，这是一个测试。你今天怎么样？",
+        "ja": "こんにちは世界、これはテストです。今日はどうですか？",
+        "ko": "안녕하세요 세계, 이것은 테스트입니다. 오늘 어떻게 지내세요?"
     }

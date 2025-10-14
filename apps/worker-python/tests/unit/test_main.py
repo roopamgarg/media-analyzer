@@ -249,33 +249,277 @@ class TestInstagramDownloadEndpoint:
         assert response.status_code == 200
 
 
+class TestMultilingualASR:
+    """Test multilingual ASR functionality."""
+    
+    def test_asr_hindi_language(self, client, sample_audio_file, mock_whisper_model, mock_language_config):
+        """Test ASR with Hindi language hint."""
+        files = {"file": ("test.wav", io.BytesIO(sample_audio_file), "audio/wav")}
+        
+        response = client.post("/asr?language=hi", files=files)
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert data["language"] == "hi"
+        mock_language_config.assert_called_once_with("hi")
+    
+    def test_asr_spanish_language(self, client, sample_audio_file, mock_whisper_model, mock_language_config):
+        """Test ASR with Spanish language hint."""
+        files = {"file": ("test.wav", io.BytesIO(sample_audio_file), "audio/wav")}
+        
+        response = client.post("/asr?language=es", files=files)
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert data["language"] == "es"
+        mock_language_config.assert_called_once_with("es")
+    
+    def test_asr_french_language(self, client, sample_audio_file, mock_whisper_model, mock_language_config):
+        """Test ASR with French language hint."""
+        files = {"file": ("test.wav", io.BytesIO(sample_audio_file), "audio/wav")}
+        
+        response = client.post("/asr?language=fr", files=files)
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert data["language"] == "fr"
+        mock_language_config.assert_called_once_with("fr")
+    
+    def test_asr_german_language(self, client, sample_audio_file, mock_whisper_model, mock_language_config):
+        """Test ASR with German language hint."""
+        files = {"file": ("test.wav", io.BytesIO(sample_audio_file), "audio/wav")}
+        
+        response = client.post("/asr?language=de", files=files)
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert data["language"] == "de"
+        mock_language_config.assert_called_once_with("de")
+    
+    def test_asr_tamil_language(self, client, sample_audio_file, mock_whisper_model, mock_language_config):
+        """Test ASR with Tamil language hint."""
+        files = {"file": ("test.wav", io.BytesIO(sample_audio_file), "audio/wav")}
+        
+        response = client.post("/asr?language=ta", files=files)
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert data["language"] == "ta"
+        mock_language_config.assert_called_once_with("ta")
+    
+    def test_asr_telugu_language(self, client, sample_audio_file, mock_whisper_model, mock_language_config):
+        """Test ASR with Telugu language hint."""
+        files = {"file": ("test.wav", io.BytesIO(sample_audio_file), "audio/wav")}
+        
+        response = client.post("/asr?language=te", files=files)
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert data["language"] == "te"
+        mock_language_config.assert_called_once_with("te")
+    
+    def test_asr_bengali_language(self, client, sample_audio_file, mock_whisper_model, mock_language_config):
+        """Test ASR with Bengali language hint."""
+        files = {"file": ("test.wav", io.BytesIO(sample_audio_file), "audio/wav")}
+        
+        response = client.post("/asr?language=bn", files=files)
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert data["language"] == "bn"
+        mock_language_config.assert_called_once_with("bn")
+    
+    def test_asr_chinese_language(self, client, sample_audio_file, mock_whisper_model, mock_language_config):
+        """Test ASR with Chinese language hint."""
+        files = {"file": ("test.wav", io.BytesIO(sample_audio_file), "audio/wav")}
+        
+        response = client.post("/asr?language=zh", files=files)
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert data["language"] == "zh"
+        mock_language_config.assert_called_once_with("zh")
+    
+    def test_asr_japanese_language(self, client, sample_audio_file, mock_whisper_model, mock_language_config):
+        """Test ASR with Japanese language hint."""
+        files = {"file": ("test.wav", io.BytesIO(sample_audio_file), "audio/wav")}
+        
+        response = client.post("/asr?language=ja", files=files)
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert data["language"] == "ja"
+        mock_language_config.assert_called_once_with("ja")
+    
+    def test_asr_korean_language(self, client, sample_audio_file, mock_whisper_model, mock_language_config):
+        """Test ASR with Korean language hint."""
+        files = {"file": ("test.wav", io.BytesIO(sample_audio_file), "audio/wav")}
+        
+        response = client.post("/asr?language=ko", files=files)
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert data["language"] == "ko"
+        mock_language_config.assert_called_once_with("ko")
+    
+    def test_asr_unsupported_language(self, client, sample_audio_file, mock_whisper_model, mock_language_config):
+        """Test ASR with unsupported language (should fallback to English)."""
+        files = {"file": ("test.wav", io.BytesIO(sample_audio_file), "audio/wav")}
+        
+        response = client.post("/asr?language=xyz", files=files)
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert data["language"] == "xyz"  # Whisper will still process with the hint
+        mock_language_config.assert_called_once_with("xyz")
+
+
+class TestEnhancedASRFeatures:
+    """Test enhanced ASR features with preprocessing and post-processing."""
+    
+    def test_asr_with_audio_preprocessing_minimal(self, client, sample_audio_file, mock_whisper_model, mock_audio_preprocessing):
+        """Test ASR with minimal audio preprocessing."""
+        files = {"file": ("test.wav", io.BytesIO(sample_audio_file), "audio/wav")}
+        
+        response = client.post("/asr?enable_preprocessing=true&preprocessing_level=minimal", files=files)
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert data["preprocessing_enabled"] == True
+        assert data["preprocessing_level"] == "minimal"
+        mock_audio_preprocessing.assert_called_once()
+    
+    def test_asr_with_audio_preprocessing_aggressive(self, client, sample_audio_file, mock_whisper_model, mock_audio_preprocessing):
+        """Test ASR with aggressive audio preprocessing."""
+        files = {"file": ("test.wav", io.BytesIO(sample_audio_file), "audio/wav")}
+        
+        response = client.post("/asr?enable_preprocessing=true&preprocessing_level=aggressive", files=files)
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert data["preprocessing_enabled"] == True
+        assert data["preprocessing_level"] == "aggressive"
+        mock_audio_preprocessing.assert_called_once()
+    
+    def test_asr_with_text_postprocessing(self, client, sample_audio_file, mock_whisper_model, mock_text_postprocessing):
+        """Test ASR with text post-processing enabled."""
+        files = {"file": ("test.wav", io.BytesIO(sample_audio_file), "audio/wav")}
+        
+        response = client.post("/asr?enable_postprocessing=true", files=files)
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert data["postprocessing_enabled"] == True
+        mock_text_postprocessing.assert_called_once()
+    
+    def test_asr_with_both_preprocessing_and_postprocessing(self, client, sample_audio_file, mock_whisper_model, mock_audio_preprocessing, mock_text_postprocessing):
+        """Test ASR with both preprocessing and post-processing enabled."""
+        files = {"file": ("test.wav", io.BytesIO(sample_audio_file), "audio/wav")}
+        
+        response = client.post("/asr?enable_preprocessing=true&preprocessing_level=standard&enable_postprocessing=true", files=files)
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert data["preprocessing_enabled"] == True
+        assert data["preprocessing_level"] == "standard"
+        assert data["postprocessing_enabled"] == True
+        mock_audio_preprocessing.assert_called_once()
+        mock_text_postprocessing.assert_called_once()
+    
+    def test_asr_with_language_specific_preprocessing(self, client, sample_audio_file, mock_whisper_model, mock_audio_preprocessing):
+        """Test ASR with language-specific preprocessing."""
+        files = {"file": ("test.wav", io.BytesIO(sample_audio_file), "audio/wav")}
+        
+        response = client.post("/asr?language=hi&enable_preprocessing=true&preprocessing_level=standard", files=files)
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert data["language"] == "hi"
+        assert data["preprocessing_enabled"] == True
+        mock_audio_preprocessing.assert_called_once()
+    
+    def test_asr_with_language_specific_postprocessing(self, client, sample_audio_file, mock_whisper_model, mock_text_postprocessing):
+        """Test ASR with language-specific post-processing."""
+        files = {"file": ("test.wav", io.BytesIO(sample_audio_file), "audio/wav")}
+        
+        response = client.post("/asr?language=es&enable_postprocessing=true", files=files)
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert data["language"] == "es"
+        assert data["postprocessing_enabled"] == True
+        mock_text_postprocessing.assert_called_once()
+    
+    def test_asr_environment_variable_override(self, client, sample_audio_file, mock_whisper_model):
+        """Test ASR with environment variable overrides."""
+        import os
+        
+        with patch.dict(os.environ, {
+            'ASR_ENABLE_PREPROCESSING': 'true',
+            'ASR_PREPROCESSING_LEVEL': 'aggressive',
+            'ASR_ENABLE_POSTPROCESSING': 'true'
+        }):
+            files = {"file": ("test.wav", io.BytesIO(sample_audio_file), "audio/wav")}
+            
+            response = client.post("/asr", files=files)
+            
+            assert response.status_code == 200
+            data = response.json()
+            assert data["preprocessing_enabled"] == True
+            assert data["preprocessing_level"] == "aggressive"
+            assert data["postprocessing_enabled"] == True
+    
+    def test_asr_parameter_override_environment_variables(self, client, sample_audio_file, mock_whisper_model):
+        """Test that ASR parameters override environment variables."""
+        import os
+        
+        with patch.dict(os.environ, {
+            'ASR_ENABLE_PREPROCESSING': 'false',
+            'ASR_PREPROCESSING_LEVEL': 'minimal',
+            'ASR_ENABLE_POSTPROCESSING': 'false'
+        }):
+            files = {"file": ("test.wav", io.BytesIO(sample_audio_file), "audio/wav")}
+            
+            response = client.post("/asr?enable_preprocessing=true&preprocessing_level=aggressive&enable_postprocessing=true", files=files)
+            
+            assert response.status_code == 200
+            data = response.json()
+            assert data["preprocessing_enabled"] == True
+            assert data["preprocessing_level"] == "aggressive"
+            assert data["postprocessing_enabled"] == True
+
+
 class TestWhisperModelLoading:
     """Test Whisper model loading functionality."""
     
     def test_whisper_model_lazy_loading(self):
         """Test that Whisper model is loaded lazily."""
-        with patch('main.model', None):
-            with patch('faster_whisper.WhisperModel') as mock_whisper:
-                # Import and reset the module to ensure fresh state
-                import importlib
-                import main
-                importlib.reload(main)
-                
-                # First call should load the model
-                model1 = main.get_whisper_model()
-                assert mock_whisper.called
-                
-                # Second call should return the same model
-                model2 = main.get_whisper_model()
-                assert model1 is model2
-                # Should not call WhisperModel again
-                assert mock_whisper.call_count == 1
+        import main
+        
+        # Clear any cached model
+        main.model = None
+        
+        with patch('main.WhisperModel') as mock_whisper:
+            mock_whisper.return_value = Mock()
+            
+            # First call should load the model
+            model1 = main.get_whisper_model()
+            assert mock_whisper.called
+            
+            # Second call should return the same model
+            model2 = main.get_whisper_model()
+            assert model1 is model2
+            # Should not call WhisperModel again
+            assert mock_whisper.call_count == 1
     
     def test_whisper_model_with_custom_params(self):
         """Test Whisper model loading with custom parameters."""
         import main
         
-        with patch('faster_whisper.WhisperModel') as mock_whisper:
+        # Clear any cached model
+        main.model = None
+        
+        with patch('main.WhisperModel') as mock_whisper:
             mock_whisper.return_value = Mock()
             
             # Test with custom model size and compute type
@@ -288,7 +532,10 @@ class TestWhisperModelLoading:
         import main
         import os
         
-        with patch('faster_whisper.WhisperModel') as mock_whisper:
+        # Clear any cached model
+        main.model = None
+        
+        with patch('main.WhisperModel') as mock_whisper:
             mock_whisper.return_value = Mock()
             
             # Set environment variables
@@ -303,7 +550,10 @@ class TestWhisperModelLoading:
         """Test Whisper model loading with invalid parameters."""
         import main
         
-        with patch('faster_whisper.WhisperModel') as mock_whisper:
+        # Clear any cached model
+        main.model = None
+        
+        with patch('main.WhisperModel') as mock_whisper:
             mock_whisper.return_value = Mock()
             
             # Test with invalid model size (should fallback to medium)
