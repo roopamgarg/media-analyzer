@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Media Analyzer API",
-    "description": "Complete collection for testing the Media Analyzer API including Instagram Reel analysis with cookie support, Python worker endpoints, and all authentication flows.",
+    "description": "Complete collection for testing the Media Analyzer API including Instagram Reel analysis with cookie support, keyword extraction endpoints, Python worker endpoints, and all authentication flows.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -402,6 +402,99 @@
           "raw": "{{worker_python_url}}/ocr",
           "host": ["{{worker_python_url}}"],
           "path": ["ocr"]
+        }
+      }
+    },
+    {
+      "name": "Extract Keywords (Basic)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"instagramReelUrl\": \"{{instagram_reel_url}}\",\n  \"languageHint\": \"en\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/keywords/extract",
+          "host": ["{{base_url}}"],
+          "path": ["keywords", "extract"]
+        }
+      }
+    },
+    {
+      "name": "Extract Keywords (with Chrome Cookies)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"instagramReelUrl\": \"{{instagram_reel_url}}\",\n  \"languageHint\": \"en\",\n  \"cookieOptions\": {\n    \"browserCookies\": \"chrome\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/keywords/extract",
+          "host": ["{{base_url}}"],
+          "path": ["keywords", "extract"]
+        }
+      }
+    },
+    {
+      "name": "Extract Keywords (with Cookies File)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"instagramReelUrl\": \"{{instagram_reel_url}}\",\n  \"languageHint\": \"en\",\n  \"cookieOptions\": {\n    \"cookiesFile\": \"{{cookies_file_path}}\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/keywords/extract",
+          "host": ["{{base_url}}"],
+          "path": ["keywords", "extract"]
+        }
+      }
+    },
+    {
+      "name": "Keywords Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/keywords/health",
+          "host": ["{{base_url}}"],
+          "path": ["keywords", "health"]
         }
       }
     }

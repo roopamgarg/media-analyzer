@@ -12,6 +12,7 @@ import { metricsPlugin } from './plugins/metrics';
 import { analyzeRoutes } from './routes/analyze';
 import { healthRoutes } from './routes/health';
 import { authRoutes } from './routes/auth';
+import { keywordRoutes } from './routes/keywords';
 import { nanoid } from 'nanoid';
 
 const server = fastify({
@@ -59,6 +60,7 @@ async function build() {
   await server.register(healthRoutes, { prefix: '/health' });
   await server.register(authRoutes, { prefix: '/auth' });
   await server.register(analyzeRoutes, { prefix: '/v1' });
+  await server.register(keywordRoutes, { prefix: '/v1' });
 
   return server;
 }
