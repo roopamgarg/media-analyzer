@@ -4,14 +4,28 @@ import pytesseract
 from PIL import Image
 import io
 import time
+import os
 from typing import List, Optional
 import logging
 from pydantic import BaseModel
 from instagram_downloader import InstagramDownloader
+from audio_preprocessing import preprocess_audio
+from text_postprocessing import post_process_transcript
+from language_config import get_language_whisper_params
 
-# Configure logging
+# Configure logging first
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Load environment variables from .env file
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+    logger.info("Environment variables loaded from .env file")
+except ImportError:
+    logger.warning("python-dotenv not installed. Install with: pip install python-dotenv")
+except Exception as e:
+    logger.warning(f"Could not load .env file: {e}")
 
 app = FastAPI(title="Media Analyzer Worker", version="1.0.0")
 
@@ -33,12 +47,44 @@ class InstagramDownloadResponse(BaseModel):
 # Initialize Whisper model lazily
 model = None
 
-def get_whisper_model():
+def get_whisper_model(model_size: Optional[str] = None, compute_type: Optional[str] = None):
+    """
+    Get Whisper model with configurable size and compute type.
+    
+    Args:
+        model_size: Model size (base, small, medium, large-v3). Defaults to env var WHISPER_MODEL_SIZE or "medium"
+        compute_type: Compute type (int8, float16, float32). Defaults to env var WHISPER_COMPUTE_TYPE or "float16"
+    
+    Returns:
+        WhisperModel instance
+    """
     global model
-    if model is None:
-        print("Loading Whisper model...")
-        model = WhisperModel("base", compute_type="int8")  # Smaller, faster model
-        print("Whisper model loaded!")
+    
+    # Get configuration from environment variables or parameters
+    model_size = model_size or os.getenv("WHISPER_MODEL_SIZE", "medium")
+    compute_type = compute_type or os.getenv("WHISPER_COMPUTE_TYPE", "int8")
+    
+    # Validate model size
+    valid_sizes = ["tiny", "base", "small", "medium", "large", "large-v2", "large-v3"]
+    if model_size not in valid_sizes:
+        logger.warning(f"Invalid model size: {model_size}, using medium")
+        model_size = "medium"
+    
+    # Validate compute type
+    valid_compute_types = ["int8", "int8_float16", "int16", "float16", "float32"]
+    if compute_type not in valid_compute_types:
+        logger.warning(f"Invalid compute type: {compute_type}, using float16")
+        compute_type = "float16"
+    
+    # Create model key for caching
+    model_key = f"{model_size}_{compute_type}"
+    
+    if model is None or not hasattr(model, '_model_key') or model._model_key != model_key:
+        print(f"Loading Whisper model: {model_size} with {compute_type}...")
+        model = WhisperModel(model_size, compute_type=compute_type)
+        model._model_key = model_key  # Store model key for caching
+        print(f"Whisper model {model_size} loaded with {compute_type}!")
+    
     return model
 
 @app.get("/health")
@@ -48,24 +94,66 @@ async def health_check():
 @app.post("/asr")
 async def asr(
     file: UploadFile = File(...),
-    language: Optional[str] = None
+    language: Optional[str] = None,
+    enable_preprocessing: Optional[bool] = None,
+    preprocessing_level: Optional[str] = None,
+    enable_postprocessing: Optional[bool] = None
 ):
-    """Speech-to-text transcription using Whisper"""
+    """
+    Enhanced Speech-to-text transcription using Whisper with preprocessing and post-processing.
+    
+    Args:
+        file: Audio file to transcribe
+        language: Language hint for transcription and processing
+        enable_preprocessing: Whether to apply audio preprocessing (defaults to env var ASR_ENABLE_PREPROCESSING)
+        preprocessing_level: Preprocessing level - minimal, standard, aggressive (defaults to env var ASR_PREPROCESSING_LEVEL)
+        enable_postprocessing: Whether to apply text post-processing (defaults to env var ASR_ENABLE_POSTPROCESSING)
+    """
     start_time = time.time()
     
     try:
         # Read audio file
         audio_data = await file.read()
         
+        # Get configuration from environment variables or parameters
+        enable_preprocessing = enable_preprocessing if enable_preprocessing is not None else os.getenv("ASR_ENABLE_PREPROCESSING", "true").lower() == "true"
+        preprocessing_level = preprocessing_level or os.getenv("ASR_PREPROCESSING_LEVEL", "standard")
+        enable_postprocessing = enable_postprocessing if enable_postprocessing is not None else os.getenv("ASR_ENABLE_POSTPROCESSING", "true").lower() == "true"
+        
+        # Apply audio preprocessing if enabled
+        if enable_preprocessing:
+            logger.info(f"Applying audio preprocessing with level: {preprocessing_level}")
+            audio_data = preprocess_audio(audio_data, language_hint=language, preprocessing_level=preprocessing_level)
+        
         # Get model (loads on first use)
         whisper_model = get_whisper_model()
+        
+        # Get language-specific parameters
+        lang_params = get_language_whisper_params(language) if language else {}
+        
+        # Enhanced transcription parameters
+        transcribe_params = {
+            "language": language,
+            "beam_size": 5,
+            "best_of": 5,
+            "temperature": lang_params.get("temperature", 0.0),
+            "vad_filter": True,
+            "vad_parameters": {
+                "min_silence_duration_ms": 500,
+                "speech_pad_ms": 400
+            },
+            "word_timestamps": True,
+            "condition_on_previous_text": True,
+            "initial_prompt": lang_params.get("initial_prompt", ""),
+            "compression_ratio_threshold": lang_params.get("compression_ratio_threshold", 2.4),
+            "log_prob_threshold": lang_params.get("log_prob_threshold", -1.0),
+            "no_speech_threshold": lang_params.get("no_speech_threshold", 0.6)
+        }
         
         # Transcribe
         segments, info = whisper_model.transcribe(
             io.BytesIO(audio_data),
-            language=language,
-            beam_size=5,
-            best_of=5
+            **transcribe_params
         )
         
         # Convert segments to list
@@ -77,12 +165,22 @@ async def asr(
                 "text": segment.text.strip()
             })
         
+        # Apply text post-processing if enabled
+        if enable_postprocessing:
+            logger.info("Applying text post-processing")
+            segments_list = post_process_transcript(segments_list, language=language)
+        
         timing = (time.time() - start_time) * 1000  # Convert to milliseconds
         
         return {
             "language": info.language,
             "segments": segments_list,
-            "timing": timing
+            "timing": timing,
+            "preprocessing_enabled": enable_preprocessing,
+            "preprocessing_level": preprocessing_level,
+            "postprocessing_enabled": enable_postprocessing,
+            "model_size": os.getenv("WHISPER_MODEL_SIZE", "medium"),
+            "compute_type": os.getenv("WHISPER_COMPUTE_TYPE", "int8")
         }
         
     except Exception as e:

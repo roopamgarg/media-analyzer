@@ -42,6 +42,37 @@ def mock_whisper_model():
         mock_model.return_value.transcribe.return_value = (mock_segments, mock_info)
         yield mock_model
 
+@pytest.fixture
+def mock_audio_preprocessing():
+    """Mock audio preprocessing for testing."""
+    with patch('main.preprocess_audio') as mock_preprocess:
+        mock_preprocess.return_value = b"preprocessed_audio_data"
+        yield mock_preprocess
+
+@pytest.fixture
+def mock_text_postprocessing():
+    """Mock text post-processing for testing."""
+    with patch('main.post_process_transcript') as mock_postprocess:
+        mock_segments = [
+            {"tStart": 0.0, "tEnd": 2.5, "text": "Hello world"},
+            {"tStart": 2.5, "tEnd": 5.0, "text": "This is a test"}
+        ]
+        mock_postprocess.return_value = mock_segments
+        yield mock_postprocess
+
+@pytest.fixture
+def mock_language_config():
+    """Mock language configuration for testing."""
+    with patch('main.get_language_whisper_params') as mock_lang_config:
+        mock_lang_config.return_value = {
+            "initial_prompt": "This is a clear, well-spoken English audio recording.",
+            "temperature": 0.0,
+            "compression_ratio_threshold": 2.4,
+            "log_prob_threshold": -1.0,
+            "no_speech_threshold": 0.6
+        }
+        yield mock_lang_config
+
 
 @pytest.fixture
 def mock_pytesseract():
