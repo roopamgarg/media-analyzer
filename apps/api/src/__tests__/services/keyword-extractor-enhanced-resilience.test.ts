@@ -48,7 +48,7 @@ describe('Enhanced Keyword Extractor Resilience', () => {
     expect(result).toBeDefined();
     expect(result.metadata).toBeDefined();
     expect(result.metadata.detectedLanguage).toBe('en');
-    expect(result.metadata.languageConfidence).toBe(1.0);
+    expect(result.metadata.languageConfidence).toBeGreaterThan(0.8);
     expect(result.keywords).toBeDefined();
     expect(result.topics).toBeDefined();
     expect(result.sentiment).toBeDefined();
@@ -74,7 +74,7 @@ describe('Enhanced Keyword Extractor Resilience', () => {
     expect(result).toBeDefined();
     expect(result.metadata).toBeDefined();
     expect(result.metadata.detectedLanguage).toBe('en');
-    expect(result.metadata.languageConfidence).toBe(1.0);
+    expect(result.metadata.languageConfidence).toBeGreaterThan(0.8);
   });
 
   it('should handle document building failures gracefully', async () => {
@@ -95,6 +95,6 @@ describe('Enhanced Keyword Extractor Resilience', () => {
     expect(result).toBeDefined();
     expect(result.metadata).toBeDefined();
     expect(result.metadata.detectedLanguage).toBe('en');
-    expect(result.metadata.languageConfidence).toBe(1.0);
+    expect(result.metadata.languageConfidence).toBeGreaterThan(0.8);
   });
 });

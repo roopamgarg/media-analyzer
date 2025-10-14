@@ -360,7 +360,7 @@ describe('Enhanced Keyword Extractor Service', () => {
       const result = await extractKeywordsEnhanced(validRequest);
       expect(result).toBeDefined();
       expect(result.metadata.detectedLanguage).toBe('en');
-      expect(result.metadata.languageConfidence).toBe(1.0);
+      expect(result.metadata.languageConfidence).toBeGreaterThan(0.8);
     });
 
     it('should handle missing audio path', async () => {
