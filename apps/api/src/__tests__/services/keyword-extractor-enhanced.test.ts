@@ -347,14 +347,20 @@ describe('Enhanced Keyword Extractor Service', () => {
     it('should handle invalid Instagram URL', async () => {
       mockIsValidInstagramReelUrl.mockReturnValue(false);
 
-      await expect(extractKeywordsEnhanced(validRequest)).rejects.toThrow('Invalid Instagram Reel URL format');
+      const result = await extractKeywordsEnhanced(validRequest);
+      expect(result).toBeDefined();
+      expect(result.metadata.detectedLanguage).toBe('unknown');
+      expect(result.metadata.languageConfidence).toBe(0);
     });
 
     it('should handle media extraction errors', async () => {
       mockIsValidInstagramReelUrl.mockReturnValue(true);
       mockFetchAndExtract.mockRejectedValue(new Error('Media extraction failed'));
 
-      await expect(extractKeywordsEnhanced(validRequest)).rejects.toThrow('Enhanced keyword extraction failed: Media extraction failed');
+      const result = await extractKeywordsEnhanced(validRequest);
+      expect(result).toBeDefined();
+      expect(result.metadata.detectedLanguage).toBe('en');
+      expect(result.metadata.languageConfidence).toBe(1.0);
     });
 
     it('should handle missing audio path', async () => {

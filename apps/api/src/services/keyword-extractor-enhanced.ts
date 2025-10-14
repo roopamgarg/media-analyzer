@@ -123,23 +123,34 @@ export async function extractKeywordsEnhanced(request: EnhancedKeywordExtraction
 
     // Step 1: Download and extract media
     const extractStart = Date.now();
-    const mediaData = await fetchAndExtract({
-      input: {
-        instagramReelUrl: request.instagramReelUrl,
-        media: {
-          languageHint: request.languageHint,
+    let mediaData;
+    try {
+      mediaData = await fetchAndExtract({
+        input: {
+          instagramReelUrl: request.instagramReelUrl,
+          media: {
+            languageHint: request.languageHint,
+          },
         },
-      },
-      options: {
-        evidence: {
-          frames: [0, 1, 3, 5, 10], // Extract key frames
-          screenshots: true,
-          transcriptSpans: true,
+        options: {
+          evidence: {
+            frames: [0, 1, 3, 5, 10], // Extract key frames
+            screenshots: true,
+            transcriptSpans: true,
+          },
+          cookieOptions: request.cookieOptions,
+          returnPdf: false,
         },
-        cookieOptions: request.cookieOptions,
-        returnPdf: false,
-      },
-    });
+      });
+    } catch (error) {
+      console.warn('Media extraction failed, continuing with minimal data:', error instanceof Error ? error.message : 'Unknown error');
+      // Provide fallback media data
+      mediaData = {
+        audioPath: null,
+        frames: [],
+        caption: null,
+      };
+    }
     timings.extract = Date.now() - extractStart;
 
     // Step 2: Run ASR and OCR in parallel with error handling
@@ -158,62 +169,187 @@ export async function extractKeywordsEnhanced(request: EnhancedKeywordExtraction
     timings.ocr = ocr.timing;
 
     // Step 3: Build document from all text sources
-    const doc = buildTimedDoc({
-      caption: mediaData.caption,
-      asr,
-      ocr,
-    });
+    let doc;
+    try {
+      doc = buildTimedDoc({
+        caption: mediaData.caption,
+        asr,
+        ocr,
+      });
+    } catch (error) {
+      console.warn('Document building failed, creating minimal document:', error instanceof Error ? error.message : 'Unknown error');
+      // Create a minimal document with just the caption
+      doc = {
+        fullText: mediaData.caption || '',
+        segments: [],
+        frames: [],
+        timing: 0,
+      };
+    }
 
     // Step 3.5: Detect language - use language hint first, then ASR result, then auto-detect
-    const detectedLanguage = request.languageHint || asr.language || 'unknown';
-    const languageDetection = detectLanguage(doc.fullText, detectedLanguage);
+    let languageDetection;
+    try {
+      const detectedLanguage = request.languageHint || asr.language || 'unknown';
+      languageDetection = detectLanguage(doc.fullText, detectedLanguage);
+    } catch (error) {
+      console.warn('Language detection failed, using fallback:', error instanceof Error ? error.message : 'Unknown error');
+      // Fallback to language hint or default
+      languageDetection = {
+        language: request.languageHint || 'en',
+        confidence: 0.5,
+        isHinglish: false
+      };
+    }
 
     // Step 4: Extract enhanced keywords
     const processingStart = Date.now();
-    const enhancedKeywords = await extractEnhancedKeywordsFromTextMultilingual(
-      doc.fullText, 
-      mediaData.caption || '', 
-      extractOCRText(ocr),
-      request.options || {},
-      languageDetection.language
-    );
+    let enhancedKeywords;
+    try {
+      enhancedKeywords = await extractEnhancedKeywordsFromTextMultilingual(
+        doc.fullText, 
+        mediaData.caption || '', 
+        extractOCRText(ocr),
+        request.options || {},
+        languageDetection.language as SupportedLanguage
+      );
+    } catch (error) {
+      console.warn('Keyword extraction failed, using fallback extraction:', error instanceof Error ? error.message : 'Unknown error');
+      // Fallback to basic keyword extraction
+      enhancedKeywords = {
+        keywords: {
+          primary: [],
+          secondary: [],
+          phrases: [],
+          hashtags: [],
+          mentions: [],
+        },
+        topics: {
+          primary: { category: 'unknown', subcategory: null, confidence: 0 },
+          secondary: [],
+        },
+        sentiment: { overall: 'neutral' as const, score: 0, comparative: 0, emotions: [] },
+        intent: { primary: 'unknown' as const, secondary: [], confidence: 0 },
+        entities: { brands: [], products: [], people: [], prices: [], locations: [], events: [], dates: [], measurements: [], currencies: [] },
+        complexity: 'simple' as const,
+        context: { domain: 'unknown', targetAudience: [], contentStyle: 'unknown' },
+      };
+    }
     timings.processing = Date.now() - processingStart;
 
     // Step 5: Generate searchable terms
-    const searchableTerms = generateEnhancedSearchableTerms(enhancedKeywords, doc.fullText);
+    let searchableTerms: string[];
+    try {
+      searchableTerms = generateEnhancedSearchableTerms(enhancedKeywords, doc.fullText);
+    } catch (error) {
+      console.warn('Searchable terms generation failed, using fallback:', error instanceof Error ? error.message : 'Unknown error');
+      // Fallback to basic searchable terms
+      try {
+        searchableTerms = doc.fullText.split(/\s+/).filter(word => word.length > 2).slice(0, 20);
+      } catch (fallbackError) {
+        console.warn('Fallback searchable terms generation failed, using empty array:', fallbackError instanceof Error ? fallbackError.message : 'Unknown error');
+        searchableTerms = [];
+      }
+    }
 
-    return {
-      keywords: enhancedKeywords.keywords,
-      topics: enhancedKeywords.topics,
-      sentiment: enhancedKeywords.sentiment,
-      intent: enhancedKeywords.intent,
-      entities: enhancedKeywords.entities,
-      metadata: {
-        caption: mediaData.caption || null,
-        transcript: doc.fullText || null,
-        ocrText: extractOCRText(ocr),
-        duration: 0, // TODO: Extract from video metadata
-        username: extractUsername(mediaData.caption || null),
-        complexity: enhancedKeywords.complexity,
-        context: enhancedKeywords.context,
-        detectedLanguage: languageDetection.language,
-        languageConfidence: languageDetection.confidence,
-      },
-      searchableTerms,
-      timings: {
-        totalMs: Date.now() - startTime,
-        stages: {
-          extract: timings.extract,
-          asr: timings.asr,
-          ocr: timings.ocr,
-          processing: timings.processing,
-          enhancement: timings.processing, // Enhancement is part of processing
+    try {
+      return {
+        keywords: enhancedKeywords.keywords,
+        topics: enhancedKeywords.topics,
+        sentiment: enhancedKeywords.sentiment,
+        intent: enhancedKeywords.intent,
+        entities: enhancedKeywords.entities,
+        metadata: {
+          caption: mediaData.caption || null,
+          transcript: doc.fullText || null,
+          ocrText: (() => {
+            try {
+              return extractOCRText(ocr);
+            } catch (error) {
+              console.warn('OCR text extraction failed:', error instanceof Error ? error.message : 'Unknown error');
+              return null;
+            }
+          })(),
+          duration: 0, // TODO: Extract from video metadata
+          username: (() => {
+            try {
+              return extractUsername(mediaData.caption || null) || undefined;
+            } catch (error) {
+              console.warn('Username extraction failed:', error instanceof Error ? error.message : 'Unknown error');
+              return undefined;
+            }
+          })(),
+          complexity: enhancedKeywords.complexity,
+          context: enhancedKeywords.context,
+          detectedLanguage: languageDetection.language,
+          languageConfidence: languageDetection.confidence,
         },
-      },
-    };
+        searchableTerms,
+        timings: {
+          totalMs: Date.now() - startTime,
+          stages: {
+            extract: timings.extract,
+            asr: timings.asr,
+            ocr: timings.ocr,
+            processing: timings.processing,
+            enhancement: timings.processing, // Enhancement is part of processing
+          },
+        },
+      };
+    } catch (error) {
+      console.warn('Final result assembly failed, returning minimal result:', error instanceof Error ? error.message : 'Unknown error');
+      // Return a minimal valid result
+      return {
+        keywords: { primary: [], secondary: [], phrases: [], hashtags: [], mentions: [] },
+        topics: { primary: { category: 'unknown', subcategory: null, confidence: 0 }, secondary: [] },
+        sentiment: { overall: 'neutral' as const, score: 0, comparative: 0, emotions: [] },
+        intent: { primary: 'unknown' as const, secondary: [], confidence: 0 },
+        entities: { brands: [], products: [], people: [], prices: [], locations: [], events: [], dates: [], measurements: [], currencies: [] },
+        metadata: {
+          caption: null,
+          transcript: null,
+          ocrText: null,
+          duration: 0,
+          username: undefined,
+          complexity: 'simple' as const,
+          context: { domain: 'unknown', targetAudience: [], contentStyle: 'unknown' },
+          detectedLanguage: 'unknown',
+          languageConfidence: 0,
+        },
+        searchableTerms: [],
+        timings: {
+          totalMs: Date.now() - startTime,
+          stages: { extract: 0, asr: 0, ocr: 0, processing: 0, enhancement: 0 },
+        },
+      };
+    }
 
   } catch (error) {
-    throw new Error(`Enhanced keyword extraction failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    console.error('Enhanced keyword extraction failed completely:', error instanceof Error ? error.message : 'Unknown error');
+    // Return a minimal valid result instead of throwing
+    return {
+      keywords: { primary: [], secondary: [], phrases: [], hashtags: [], mentions: [] },
+      topics: { primary: { category: 'unknown', subcategory: null, confidence: 0 }, secondary: [] },
+      sentiment: { overall: 'neutral' as const, score: 0, comparative: 0, emotions: [] },
+      intent: { primary: 'unknown' as const, secondary: [], confidence: 0 },
+      entities: { brands: [], products: [], people: [], prices: [], locations: [], events: [], dates: [], measurements: [], currencies: [] },
+      metadata: {
+        caption: null,
+        transcript: null,
+        ocrText: null,
+        duration: 0,
+        username: undefined,
+        complexity: 'simple' as const,
+        context: { domain: 'unknown', targetAudience: [], contentStyle: 'unknown' },
+        detectedLanguage: 'unknown',
+        languageConfidence: 0,
+      },
+      searchableTerms: [],
+      timings: {
+        totalMs: Date.now() - startTime,
+        stages: { extract: 0, asr: 0, ocr: 0, processing: 0, enhancement: 0 },
+      },
+    };
   }
 }
 

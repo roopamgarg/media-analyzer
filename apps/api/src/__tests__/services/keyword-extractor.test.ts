@@ -80,6 +80,8 @@ describe('Keyword Extractor Service', () => {
             targetAudience: ['young'],
             contentStyle: 'informal',
           },
+          detectedLanguage: 'en',
+          languageConfidence: 0.95,
         },
         searchableTerms: ['skincare', 'routine', 'beauty', 'fashion'],
         timings: {
@@ -520,12 +522,14 @@ describe('Keyword Extractor Service', () => {
         duration: 30,
         username: 'beautyexpert',
         complexity: 'moderate' as const,
-        context: {
-          domain: 'fashion',
-          targetAudience: ['young', 'casual'],
-          contentStyle: 'informal',
+          context: {
+            domain: 'fashion',
+            targetAudience: ['young', 'casual'],
+            contentStyle: 'informal',
+          },
+          detectedLanguage: 'en',
+          languageConfidence: 0.95,
         },
-      },
       searchableTerms: [
         'skincare', 'routine', 'beauty', 'fashion', 'skincare', 'beauty',
         'loreal', 'maybelline', 'moisturizer', 'cleanser', 'serum',
@@ -601,6 +605,8 @@ describe('Keyword Extractor Service', () => {
             targetAudience: ['young', 'casual'],
             contentStyle: 'informal',
           },
+          detectedLanguage: 'en',
+          languageConfidence: 0.95,
         },
         searchableTerms: ['skincare', 'routine', 'beauty', 'fashion'],
         timings: {
@@ -682,6 +688,8 @@ describe('Keyword Extractor Service', () => {
             targetAudience: ['young'],
             contentStyle: 'informal',
           },
+          detectedLanguage: 'en',
+          languageConfidence: 0.95,
         },
         searchableTerms: ['skincare', 'routine', 'beauty', 'fashion'],
         timings: {
@@ -759,6 +767,8 @@ describe('Keyword Extractor Service', () => {
             targetAudience: ['young'],
             contentStyle: 'informal',
           },
+          detectedLanguage: 'en',
+          languageConfidence: 0.95,
         },
         searchableTerms: ['gaming', 'console', 'setup', 'technology'],
         timings: {
@@ -837,6 +847,8 @@ describe('Keyword Extractor Service', () => {
             targetAudience: ['young'],
             contentStyle: 'informal',
           },
+          detectedLanguage: 'en',
+          languageConfidence: 0.95,
         },
         searchableTerms: ['skincare', 'routine', 'beauty', 'fashion'],
         timings: {
@@ -906,6 +918,8 @@ describe('Keyword Extractor Service', () => {
             targetAudience: ['young'],
             contentStyle: 'informal',
           },
+          detectedLanguage: 'en',
+          languageConfidence: 0.95,
         },
         searchableTerms: ['skincare', 'routine', 'beauty', 'fashion'],
         timings: {
@@ -980,6 +994,8 @@ describe('Keyword Extractor Service', () => {
             targetAudience: ['young'],
             contentStyle: 'informal',
           },
+          detectedLanguage: 'en',
+          languageConfidence: 0.95,
         },
         searchableTerms: ['skincare', 'routine', 'beauty', 'fashion'],
         timings: {
@@ -1052,6 +1068,8 @@ describe('Keyword Extractor Service', () => {
             targetAudience: ['young'],
             contentStyle: 'informal',
           },
+          detectedLanguage: 'en',
+          languageConfidence: 0.95,
         },
         searchableTerms: ['skincare', 'routine', 'beauty', 'fashion'],
         timings: {
@@ -1121,6 +1139,8 @@ describe('Keyword Extractor Service', () => {
             targetAudience: ['young'],
             contentStyle: 'informal',
           },
+          detectedLanguage: 'en',
+          languageConfidence: 0.95,
         },
         searchableTerms: ['skincare', 'routine', 'beauty', 'fashion'],
         timings: {
@@ -1204,6 +1224,8 @@ describe('Keyword Extractor Service', () => {
             targetAudience: [],
             contentStyle: 'neutral',
           },
+          detectedLanguage: 'en',
+          languageConfidence: 0.95,
         },
         searchableTerms: [],
         timings: {

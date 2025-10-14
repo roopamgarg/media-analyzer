@@ -848,7 +848,9 @@ export const createMockEnhancedKeywordResult = (overrides = {}) => ({
     ocrText: 'Brand Name',
     duration: 30,
     username: 'beautyexpert',
-    complexity: 'moderate' as const
+    complexity: 'moderate' as const,
+    detectedLanguage: 'en',
+    languageConfidence: 0.95
   },
   searchableTerms: ['skincare', 'routine', 'beauty', 'fashion'],
   timings: {
