@@ -1,0 +1,29 @@
+{
+  "name": "@media-analyzer/worker-python",
+  "version": "1.0.0",
+  "description": "Python worker service for media analysis",
+  "scripts": {
+    "test": "pytest",
+    "test:unit": "pytest tests/unit -v",
+    "test:integration": "pytest tests/integration -v",
+    "test:coverage": "pytest --cov=. --cov-report=html --cov-report=term-missing",
+    "test:watch": "pytest --watch",
+    "test:ci": "pytest --cov=. --cov-report=xml --junitxml=test-results.xml",
+    "lint": "flake8 . --max-line-length=100 --exclude=venv,__pycache__",
+    "format": "black . --line-length=100 --exclude=venv",
+    "type-check": "mypy . --ignore-missing-imports",
+    "dev": "uvicorn main:app --reload --host 0.0.0.0 --port 8000",
+    "start": "uvicorn main:app --host 0.0.0.0 --port 8000"
+  },
+  "keywords": [
+    "media-analysis",
+    "python",
+    "fastapi",
+    "worker",
+    "asr",
+    "ocr",
+    "instagram"
+  ],
+  "author": "Media Analyzer Team",
+  "license": "MIT"
+}
