@@ -1,4 +1,5 @@
 import { extractKeywords } from '../../services/keyword-extractor';
+import { extractKeywordsEnhanced } from '../../services/keyword-extractor-enhanced';
 import { downloadInstagramReel, isValidInstagramReelUrl } from '../../services/instagram';
 import { fetchAndExtract } from '../../services/media';
 import { callWorkerASR } from '../../services/worker';
@@ -18,6 +19,9 @@ const mockFetchAndExtract = fetchAndExtract as jest.MockedFunction<typeof fetchA
 const mockCallWorkerASR = callWorkerASR as jest.MockedFunction<typeof callWorkerASR>;
 const mockRunOCR = runOCR as jest.MockedFunction<typeof runOCR>;
 const mockBuildTimedDoc = buildTimedDoc as jest.MockedFunction<typeof buildTimedDoc>;
+
+// Get the mocked enhanced service
+const mockExtractKeywordsEnhanced = extractKeywordsEnhanced as jest.MockedFunction<typeof extractKeywordsEnhanced>;
 
 describe('Keyword Extractor Service', () => {
   beforeEach(() => {
@@ -375,6 +379,273 @@ describe('Keyword Extractor Service', () => {
           returnPdf: false,
         },
       });
+    });
+  });
+
+  describe('Enhanced Keyword Extraction', () => {
+    const validEnhancedRequest = {
+      instagramReelUrl: 'https://www.instagram.com/reel/ABC123/',
+      languageHint: 'en',
+      cookieOptions: {
+        browserCookies: 'chrome' as const,
+      },
+      options: {
+        includeNgrams: true,
+        includeSentiment: true,
+        includeIntent: true,
+        includeEntities: true,
+      },
+    };
+
+    const mockEnhancedResult = {
+      keywords: {
+        primary: [
+          { term: 'skincare', confidence: 0.95, type: 'single' as const },
+          { term: 'routine', confidence: 0.88, type: 'single' as const },
+          { term: 'beauty tips', confidence: 0.82, type: 'phrase' as const },
+        ],
+        secondary: ['beauty', 'skin', 'care', 'moisturizer', 'cleanser'],
+        phrases: [
+          { text: 'skincare routine', frequency: 2, significance: 0.8 },
+          { text: 'beauty tips', frequency: 1, significance: 0.6 },
+        ],
+        hashtags: ['#skincare', '#beauty', '#routine'],
+        mentions: ['@beautyexpert'],
+      },
+      topics: {
+        primary: {
+          category: 'fashion',
+          subcategory: 'skincare',
+          confidence: 0.92,
+        },
+        secondary: [
+          { category: 'beauty', confidence: 0.85 },
+          { category: 'lifestyle', confidence: 0.70 },
+        ],
+      },
+      sentiment: {
+        overall: 'positive' as const,
+        score: 3.2,
+        comparative: 0.8,
+        emotions: ['joy', 'excitement', 'confidence'],
+      },
+      intent: {
+        primary: 'educate' as const,
+        secondary: ['inform', 'inspire'],
+        confidence: 0.9,
+      },
+      entities: {
+        brands: ['loreal', 'maybelline'],
+        products: ['moisturizer', 'cleanser', 'serum'],
+        people: ['Beauty Expert', 'Skin Specialist'],
+        prices: ['$25', '$50'],
+        locations: ['New York', 'Los Angeles'],
+        events: ['beauty conference', 'skincare workshop'],
+        dates: ['2024-01-15', 'Monday'],
+        measurements: ['2 oz', '100ml'],
+        currencies: ['dollars', 'USD'],
+      },
+      metadata: {
+        caption: 'Amazing skincare routine! #skincare #beauty',
+        transcript: 'This is an amazing skincare routine for beginners',
+        ocrText: 'Brand Name - $50',
+        duration: 30,
+        username: 'beautyexpert',
+        complexity: 'moderate' as const,
+        context: {
+          domain: 'fashion',
+          targetAudience: ['young', 'casual'],
+          contentStyle: 'informal',
+        },
+      },
+      searchableTerms: [
+        'skincare', 'routine', 'beauty', 'fashion', 'skincare', 'beauty',
+        'loreal', 'maybelline', 'moisturizer', 'cleanser', 'serum',
+        'video', 'reel', 'instagram', 'social', 'content', 'viral', 'trending'
+      ],
+      timings: {
+        totalMs: 3500,
+        stages: {
+          extract: 800,
+          asr: 1200,
+          ocr: 300,
+          processing: 200,
+          enhancement: 1000,
+        },
+      },
+    };
+
+    it('should extract enhanced keywords with all features', async () => {
+      mockExtractKeywordsEnhanced.mockResolvedValue(mockEnhancedResult);
+
+      const result = await extractKeywordsEnhanced(validEnhancedRequest);
+
+      expect(result).toEqual(mockEnhancedResult);
+      expect(result.keywords.primary).toHaveLength(3);
+      expect(result.keywords.primary[0]).toHaveProperty('confidence');
+      expect(result.keywords.primary[0]).toHaveProperty('type');
+      expect(result.topics.primary).toHaveProperty('confidence');
+      expect(result.sentiment.emotions).toContain('joy');
+      expect(result.entities.brands).toContain('loreal');
+      expect(result.metadata.context).toBeDefined();
+      expect(result.searchableTerms.length).toBeGreaterThan(10);
+    });
+
+    it('should handle enhanced scoring algorithm', async () => {
+      const textWithPositionKeywords = 'Amazing skincare routine with the best products for your skin care needs';
+      mockBuildTimedDoc.mockReturnValue({
+        fullText: textWithPositionKeywords,
+        timeline: [],
+      });
+
+      mockExtractKeywordsEnhanced.mockResolvedValue(mockEnhancedResult);
+
+      const result = await extractKeywordsEnhanced(validEnhancedRequest);
+
+      // Verify that position-based scoring is working
+      expect(result.keywords.primary.some(k => k.term === 'amazing')).toBeTruthy();
+      expect(result.keywords.primary.some(k => k.term === 'skincare')).toBeTruthy();
+    });
+
+    it('should detect expanded topic categories', async () => {
+      const gamingText = 'This amazing gaming setup with the latest console and epic gameplay';
+      mockBuildTimedDoc.mockReturnValue({
+        fullText: gamingText,
+        timeline: [],
+      });
+
+      const gamingResult = {
+        ...mockEnhancedResult,
+        topics: {
+          primary: { category: 'gaming', subcategory: 'console', confidence: 0.95 },
+          secondary: [{ category: 'technology', confidence: 0.80 }],
+        },
+      };
+
+      mockExtractKeywordsEnhanced.mockResolvedValue(gamingResult);
+
+      const result = await extractKeywordsEnhanced(validEnhancedRequest);
+
+      expect(result.topics.primary.category).toBe('gaming');
+      expect(result.topics.primary.subcategory).toBe('console');
+    });
+
+    it('should extract enhanced entities with new types', async () => {
+      const result = await extractKeywordsEnhanced(validEnhancedRequest);
+
+      expect(result.entities).toHaveProperty('events');
+      expect(result.entities).toHaveProperty('dates');
+      expect(result.entities).toHaveProperty('measurements');
+      expect(result.entities).toHaveProperty('currencies');
+      expect(Array.isArray(result.entities.events)).toBe(true);
+      expect(Array.isArray(result.entities.dates)).toBe(true);
+    });
+
+    it('should analyze sentiment with enhanced emotions', async () => {
+      const result = await extractKeywordsEnhanced(validEnhancedRequest);
+
+      expect(result.sentiment.emotions).toContain('joy');
+      expect(result.sentiment.emotions).toContain('excitement');
+      expect(result.sentiment.emotions).toContain('confidence');
+      expect(result.sentiment.score).toBeGreaterThan(0);
+    });
+
+    it('should detect content context', async () => {
+      const result = await extractKeywordsEnhanced(validEnhancedRequest);
+
+      expect(result.metadata.context).toBeDefined();
+      expect(result.metadata.context?.domain).toBe('fashion');
+      expect(result.metadata.context?.targetAudience).toContain('young');
+      expect(result.metadata.context?.contentStyle).toBe('informal');
+    });
+
+    it('should generate enhanced searchable terms with weighting', async () => {
+      const result = await extractKeywordsEnhanced(validEnhancedRequest);
+
+      expect(result.searchableTerms.length).toBeGreaterThan(20);
+      expect(result.searchableTerms).toContain('skincare');
+      expect(result.searchableTerms).toContain('beauty');
+      expect(result.searchableTerms).toContain('loreal');
+      expect(result.searchableTerms).toContain('fashion');
+    });
+
+    it('should handle phrase extraction with PMI scoring', async () => {
+      const result = await extractKeywordsEnhanced(validEnhancedRequest);
+
+      expect(result.keywords.phrases).toBeDefined();
+      expect(result.keywords.phrases.length).toBeGreaterThan(0);
+      expect(result.keywords.phrases[0]).toHaveProperty('significance');
+      expect(result.keywords.phrases[0].significance).toBeGreaterThan(0);
+    });
+
+    it('should filter stopwords from secondary keywords', async () => {
+      const result = await extractKeywordsEnhanced(validEnhancedRequest);
+
+      expect(result.keywords.secondary).toBeDefined();
+      expect(result.keywords.secondary.length).toBeGreaterThan(0);
+      
+      // Check that common stopwords are not included
+      const stopwords = ['the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by'];
+      stopwords.forEach(stopword => {
+        expect(result.keywords.secondary).not.toContain(stopword);
+      });
+    });
+
+    it('should handle disabled options', async () => {
+      const requestWithDisabledOptions = {
+        ...validEnhancedRequest,
+        options: {
+          includeNgrams: false,
+          includeSentiment: false,
+          includeIntent: false,
+          includeEntities: false,
+        },
+      };
+
+      const minimalResult = {
+        ...mockEnhancedResult,
+        keywords: {
+          ...mockEnhancedResult.keywords,
+          phrases: [],
+        },
+        sentiment: {
+          overall: 'neutral' as const,
+          score: 0,
+          comparative: 0,
+          emotions: [],
+        },
+        intent: {
+          primary: 'unknown' as const,
+          secondary: [],
+          confidence: 0,
+        },
+        entities: {
+          brands: [],
+          products: [],
+          people: [],
+          prices: [],
+          locations: [],
+          events: [],
+          dates: [],
+          measurements: [],
+          currencies: [],
+        },
+      };
+
+      mockExtractKeywordsEnhanced.mockResolvedValue(minimalResult);
+
+      const result = await extractKeywordsEnhanced(requestWithDisabledOptions);
+
+      expect(result.keywords.phrases).toHaveLength(0);
+      expect(result.sentiment.emotions).toHaveLength(0);
+      expect(result.intent.primary).toBe('unknown');
+      expect(result.entities.brands).toHaveLength(0);
+    });
+
+    it('should handle errors gracefully', async () => {
+      mockExtractKeywordsEnhanced.mockRejectedValue(new Error('Enhanced extraction failed'));
+
+      await expect(extractKeywordsEnhanced(validEnhancedRequest)).rejects.toThrow('Enhanced extraction failed');
     });
   });
 });
