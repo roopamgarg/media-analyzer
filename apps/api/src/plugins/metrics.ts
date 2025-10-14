@@ -66,5 +66,3 @@ export const metricsPlugin = fp(async (fastify: any) => {
   });
 });
 
-// Export metrics for use in other parts of the application
-export { metrics };

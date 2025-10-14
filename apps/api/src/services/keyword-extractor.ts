@@ -70,6 +70,7 @@ export async function extractKeywords(request: KeywordExtractionRequest): Promis
           transcriptSpans: true,
         },
         cookieOptions: request.cookieOptions,
+        returnPdf: false,
       },
     });
     timings.extract = Date.now() - extractStart;
@@ -105,7 +106,7 @@ export async function extractKeywords(request: KeywordExtractionRequest): Promis
         transcript: doc.fullText || null,
         ocrText: extractOCRText(ocr),
         duration: 0, // TODO: Extract from video metadata
-        username: extractUsername(mediaData.caption),
+        username: extractUsername(mediaData.caption || null),
       },
       searchableTerms,
       timings: {

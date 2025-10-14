@@ -1,5 +1,5 @@
 import { AnalysisJobData } from '@media-analyzer/lib-node';
-import { prepareContext, runSyncAnalysis } from './analysis-processor';
+import { prepareContext, runSyncAnalysis } from '@media-analyzer/api/src/services/analyze-sync';
 
 export async function processAnalysisJob(data: AnalysisJobData) {
   // Cast category to the correct type
