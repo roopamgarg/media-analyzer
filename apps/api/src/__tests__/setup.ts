@@ -836,7 +836,11 @@ export const createMockEnhancedKeywordResult = (overrides = {}) => ({
     products: ['cleanser'],
     people: ['influencer'],
     prices: ['$50'],
-    locations: ['New York']
+    locations: ['New York'],
+    events: [],
+    dates: [],
+    measurements: [],
+    currencies: []
   },
   metadata: {
     caption: 'Amazing skincare routine!',

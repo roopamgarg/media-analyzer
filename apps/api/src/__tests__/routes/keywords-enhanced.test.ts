@@ -74,6 +74,10 @@ describe('Enhanced Keywords Routes', () => {
         people: ['influencer'],
         prices: ['$50'],
         locations: ['New York'],
+        events: [],
+        dates: [],
+        measurements: [],
+        currencies: []
       },
       metadata: {
         caption: 'Amazing skincare routine!',

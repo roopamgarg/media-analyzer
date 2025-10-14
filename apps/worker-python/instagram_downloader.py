@@ -13,13 +13,14 @@ class InstagramDownloader:
         self.browser_cookies = browser_cookies  # e.g., 'chrome', 'firefox', 'safari'
         self.cookies_file = cookies_file  # Path to cookies.txt file
         
-    def download_reel(self, url: str, output_path: Optional[str] = None) -> Dict[str, Any]:
+    def download_reel(self, url: str, output_path: Optional[str] = None, metadata_only: bool = False) -> Dict[str, Any]:
         """
         Download Instagram Reel video and return metadata
         
         Args:
             url: Instagram Reel URL
-            output_path: Optional custom output path. If None, only extract metadata without downloading
+            output_path: Optional custom output path. If None, uses temp directory
+            metadata_only: If True, only extract metadata without downloading
             
         Returns:
             Dict containing video path, caption, username, and other metadata
@@ -36,12 +37,17 @@ class InstagramDownloader:
                 'extract_flat': False,
             }
             
-            # If output_path is None, only extract metadata without downloading
+            # Set output path
             if output_path is None:
+                output_path = os.path.join(self.temp_dir, '%(title)s.%(ext)s')
+            
+            ydl_opts['outtmpl'] = output_path
+            
+            # If metadata_only is True, only extract metadata without downloading
+            if metadata_only:
                 ydl_opts['skip_download'] = True
                 logger.info("Extracting metadata only (no download)")
             else:
-                ydl_opts['outtmpl'] = output_path
                 logger.info(f"Downloading to: {output_path}")
             
             # Add cookie options if provided
@@ -58,8 +64,8 @@ class InstagramDownloader:
                 
                 logger.info(f"Available formats: {[f.get('format_id', 'unknown') for f in info.get('formats', [])]}")
                 
-                # Download the video only if output_path is provided
-                if output_path is not None:
+                # Download the video unless metadata_only is True
+                if not metadata_only:
                     ydl.download([url])
                     
                     # Get the actual downloaded file path

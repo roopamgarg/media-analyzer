@@ -119,14 +119,17 @@ class TestInstagramDownloader:
         mock_ydl.extract_info.return_value = mock_info
         mock_ydl.prepare_filename.return_value = os.path.join(temp_dir, 'test_video.mp4')
         
-        # Create a dummy video file
-        video_path = os.path.join(temp_dir, 'test_video.mp4')
-        with open(video_path, 'w') as f:
-            f.write('dummy video content')
+        # Mock the download method to create the file
+        def mock_download(urls):
+            video_path = os.path.join(temp_dir, 'test_video.mp4')
+            with open(video_path, 'w') as f:
+                f.write('dummy video content')
+        mock_ydl.download.side_effect = mock_download
         
         downloader = InstagramDownloader()
         result = downloader.download_reel("https://www.instagram.com/reel/test123/")
         
+        video_path = os.path.join(temp_dir, 'test_video.mp4')
         assert result['video_path'] == video_path
         assert result['caption'] == 'Test Instagram Reel'
         assert result['username'] == 'test_user'
@@ -263,6 +266,11 @@ class TestInstagramDownloader:
         mock_ydl.extract_info.return_value = mock_info
         mock_ydl.prepare_filename.return_value = '/nonexistent/path/video.mp4'
         
+        # Mock the download method to not create any file
+        def mock_download(urls):
+            pass  # Don't create any file
+        mock_ydl.download.side_effect = mock_download
+        
         downloader = InstagramDownloader()
         
         with pytest.raises(Exception, match="Downloaded file not found"):
@@ -304,14 +312,17 @@ class TestInstagramDownloader:
         mock_ydl.extract_info.return_value = mock_info
         mock_ydl.prepare_filename.return_value = os.path.join(temp_dir, 'test_video.mp4')
         
-        # Create a dummy video file with .webm extension
-        video_path = os.path.join(temp_dir, 'test_video.webm')
-        with open(video_path, 'w') as f:
-            f.write('dummy video content')
+        # Mock the download method to create a .webm file instead of .mp4
+        def mock_download(urls):
+            video_path = os.path.join(temp_dir, 'test_video.webm')
+            with open(video_path, 'w') as f:
+                f.write('dummy video content')
+        mock_ydl.download.side_effect = mock_download
         
         downloader = InstagramDownloader()
         result = downloader.download_reel("https://www.instagram.com/reel/test123/")
         
+        video_path = os.path.join(temp_dir, 'test_video.webm')
         assert result['video_path'] == video_path
         downloader.cleanup()
 
@@ -341,14 +352,17 @@ class TestInstagramDownloaderEdgeCases:
             mock_ydl.extract_info.return_value = mock_info
             mock_ydl.prepare_filename.return_value = os.path.join(temp_dir, 'test_video.mp4')
             
-            # Create a dummy video file
-            video_path = os.path.join(temp_dir, 'test_video.mp4')
-            with open(video_path, 'w') as f:
-                f.write('dummy video content')
+            # Mock the download method to create the file
+            def mock_download(urls):
+                video_path = os.path.join(temp_dir, 'test_video.mp4')
+                with open(video_path, 'w') as f:
+                    f.write('dummy video content')
+            mock_ydl.download.side_effect = mock_download
             
             downloader = InstagramDownloader()
             result = downloader.download_reel("https://www.instagram.com/reel/test123/")
             
+            video_path = os.path.join(temp_dir, 'test_video.mp4')
             assert result['video_path'] == video_path
             assert result['caption'] == ''
             assert result['username'] == ''
@@ -379,13 +393,16 @@ class TestInstagramDownloaderEdgeCases:
             mock_ydl.extract_info.return_value = mock_info
             mock_ydl.prepare_filename.return_value = os.path.join(temp_dir, 'test_video.mp4')
             
-            # Create a dummy video file
-            video_path = os.path.join(temp_dir, 'test_video.mp4')
-            with open(video_path, 'w') as f:
-                f.write('dummy video content')
+            # Mock the download method to create the file
+            def mock_download(urls):
+                video_path = os.path.join(temp_dir, 'test_video.mp4')
+                with open(video_path, 'w') as f:
+                    f.write('dummy video content')
+            mock_ydl.download.side_effect = mock_download
             
             downloader = InstagramDownloader()
             result = downloader.download_reel("https://www.instagram.com/reel/test123/")
             
+            video_path = os.path.join(temp_dir, 'test_video.mp4')
             assert result['video_path'] == video_path
             downloader.cleanup()
