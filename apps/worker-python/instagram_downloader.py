@@ -19,20 +19,14 @@ class InstagramDownloader:
         
         Args:
             url: Instagram Reel URL
-            output_path: Optional custom output path
+            output_path: Optional custom output path. If None, only extract metadata without downloading
             
         Returns:
             Dict containing video path, caption, username, and other metadata
         """
         try:
-            # Extract reel ID for filename if no output path provided
-            if not output_path:
-                reel_id = self._extract_reel_id(url)
-                output_path = os.path.join(self.temp_dir, f"instagram_reel_{reel_id}.%(ext)s")
-            
             # Configure yt-dlp options
             ydl_opts = {
-                'outtmpl': output_path,
                 'format': 'best',  # Use best available format
                 'writesubtitles': False,
                 'writeautomaticsub': False,
@@ -41,6 +35,14 @@ class InstagramDownloader:
                 'no_warnings': True,
                 'extract_flat': False,
             }
+            
+            # If output_path is None, only extract metadata without downloading
+            if output_path is None:
+                ydl_opts['skip_download'] = True
+                logger.info("Extracting metadata only (no download)")
+            else:
+                ydl_opts['outtmpl'] = output_path
+                logger.info(f"Downloading to: {output_path}")
             
             # Add cookie options if provided
             if self.browser_cookies:
@@ -56,21 +58,27 @@ class InstagramDownloader:
                 
                 logger.info(f"Available formats: {[f.get('format_id', 'unknown') for f in info.get('formats', [])]}")
                 
-                # Download the video
-                ydl.download([url])
-                
-                # Get the actual downloaded file path
-                downloaded_file = ydl.prepare_filename(info)
-                if not os.path.exists(downloaded_file):
-                    # Try with different extensions
-                    for ext in ['mp4', 'webm', 'mkv']:
-                        test_path = downloaded_file.rsplit('.', 1)[0] + f'.{ext}'
-                        if os.path.exists(test_path):
-                            downloaded_file = test_path
-                            break
-                
-                if not os.path.exists(downloaded_file):
-                    raise Exception(f"Downloaded file not found: {downloaded_file}")
+                # Download the video only if output_path is provided
+                if output_path is not None:
+                    ydl.download([url])
+                    
+                    # Get the actual downloaded file path
+                    downloaded_file = ydl.prepare_filename(info)
+                    if not os.path.exists(downloaded_file):
+                        # Try with different extensions
+                        for ext in ['mp4', 'webm', 'mkv']:
+                            test_path = downloaded_file.rsplit('.', 1)[0] + f'.{ext}'
+                            if os.path.exists(test_path):
+                                downloaded_file = test_path
+                                break
+                    
+                    if not os.path.exists(downloaded_file):
+                        raise Exception(f"Downloaded file not found: {downloaded_file}")
+                    
+                    logger.info(f"Successfully downloaded Instagram Reel: {downloaded_file}")
+                else:
+                    downloaded_file = None
+                    logger.info("Metadata extraction completed (no file downloaded)")
                 
                 # Extract metadata
                 metadata = {
@@ -85,7 +93,6 @@ class InstagramDownloader:
                     'webpage_url': info.get('webpage_url', url),
                 }
                 
-                logger.info(f"Successfully downloaded Instagram Reel: {downloaded_file}")
                 return metadata
                 
         except Exception as e:
