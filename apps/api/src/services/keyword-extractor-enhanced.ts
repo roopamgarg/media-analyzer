@@ -1,6 +1,6 @@
 import { downloadInstagramReel, isValidInstagramReelUrl } from './instagram';
 import { fetchAndExtract } from './media';
-import { callWorkerASR } from './worker';
+import { callWorkerASR, callWorkerSemanticAnalysis } from './worker';
 import { runOCR } from './ocr';
 import { buildTimedDoc } from './nlp';
 import { config } from '../config';
@@ -37,6 +37,7 @@ export interface EnhancedKeywordExtractionResult {
       term: string;
       confidence: number;
       type: 'single' | 'phrase';
+      cluster?: number;
     }>;
     secondary: string[];
     phrases: Array<{
@@ -46,6 +47,11 @@ export interface EnhancedKeywordExtractionResult {
     }>;
     hashtags: string[];
     mentions: string[];
+    semanticClusters?: Array<{
+      id: number;
+      representative: string;
+      members: string[];
+    }>;
   };
   topics: {
     primary: {
@@ -419,13 +425,26 @@ async function extractEnhancedKeywordsFromText(
   // Content context analysis
   const context = analyzeContentContext(combinedText, topics);
 
+  // Apply semantic clustering to primary keywords
+  let clusteredPrimary = primaryKeywords;
+  let semanticClusters: Array<{ id: number; representative: string; members: string[] }> = [];
+  
+  try {
+    const clusteringResult = await applySemanticClustering(primaryKeywords, 'en');
+    clusteredPrimary = clusteringResult.keywords;
+    semanticClusters = clusteringResult.clusters;
+  } catch (error) {
+    console.warn('Semantic clustering skipped:', error);
+  }
+
   return {
     keywords: {
-      primary: primaryKeywords,
+      primary: clusteredPrimary,
       secondary: secondaryKeywords,
       phrases,
       hashtags,
       mentions,
+      semanticClusters,  // Add semantic clusters to response
     },
     topics,
     sentiment,
@@ -503,13 +522,26 @@ async function extractEnhancedKeywordsFromTextMultilingual(
   // Analyze context
   const context = analyzeContentContext(combinedText, topics);
 
+  // Apply semantic clustering to primary keywords with language support
+  let clusteredPrimary = primaryKeywords;
+  let semanticClusters: Array<{ id: number; representative: string; members: string[] }> = [];
+  
+  try {
+    const clusteringResult = await applySemanticClustering(primaryKeywords, language);
+    clusteredPrimary = clusteringResult.keywords;
+    semanticClusters = clusteringResult.clusters;
+  } catch (error) {
+    console.warn('Semantic clustering skipped:', error);
+  }
+
   return {
     keywords: {
-      primary: primaryKeywords,
+      primary: clusteredPrimary,
       secondary: secondaryKeywords,
       phrases,
       hashtags,
       mentions,
+      semanticClusters,  // Add semantic clusters to response
     },
     topics,
     sentiment,
@@ -1516,4 +1548,62 @@ function extractUsername(caption: string | null): string | undefined {
   
   const mentionMatch = caption.match(/@(\w+)/);
   return mentionMatch ? mentionMatch[1] : undefined;
+}
+
+/**
+ * Apply semantic clustering to keywords for better grouping
+ */
+async function applySemanticClustering(
+  keywords: Array<{ term: string; confidence: number; type: 'single' | 'phrase' }>,
+  language: string
+): Promise<{
+  keywords: Array<{ term: string; confidence: number; type: 'single' | 'phrase'; cluster?: number }>;
+  clusters: Array<{ id: number; representative: string; members: string[] }>;
+}> {
+  try {
+    // Extract keyword terms
+    const terms = keywords.map(k => k.term);
+    
+    if (terms.length < 2) {
+      return {
+        keywords,
+        clusters: []
+      };
+    }
+    
+    // Call semantic analysis service
+    const semanticResult = await callWorkerSemanticAnalysis(terms, language);
+    
+    // Map cluster IDs to keywords
+    const clusterMap = new Map<string, number>();
+    semanticResult.clusters.forEach(cluster => {
+      cluster.keywords.forEach(keyword => {
+        clusterMap.set(keyword, cluster.id);
+      });
+    });
+    
+    // Add cluster information to keywords
+    const clusteredKeywords = keywords.map(kw => ({
+      ...kw,
+      cluster: clusterMap.get(kw.term)
+    }));
+    
+    // Create cluster summaries
+    const clusters = semanticResult.clusters.map(cluster => ({
+      id: cluster.id,
+      representative: cluster.centroid_keyword,
+      members: cluster.keywords
+    }));
+    
+    return {
+      keywords: clusteredKeywords,
+      clusters
+    };
+  } catch (error) {
+    console.warn('Semantic clustering failed, returning unclustered keywords:', error);
+    return {
+      keywords,
+      clusters: []
+    };
+  }
 }

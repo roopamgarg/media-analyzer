@@ -2,9 +2,9 @@ import { CreateAnalysisRequest, AnalysisResult } from '@media-analyzer/contracts
 import type { z } from 'zod';
 import { config } from '../config';
 import { fetchAndExtract } from './media';
-import { callWorkerASR } from './worker';
+import { callWorkerASR, callWorkerNER } from './worker';
 import { runOCR } from './ocr';
-import { buildTimedDoc, ner } from './nlp';
+import { buildTimedDoc, ner, convertToLegacyEntities } from './nlp';
 import { buildFlags } from './rules';
 import { scoreAll } from './scoring';
 import { assembleEvidence } from './evidence';
@@ -72,10 +72,20 @@ export async function runSyncAnalysis(ctx: AnalysisContext): Promise<AnalysisRes
     const doc = buildTimedDoc({ caption: raw.caption, asr, ocr });
     timings.doc = Date.now() - docStart;
     
-    // Step 4: Extract entities
+    // Step 4: Extract entities using ML-based NER
     const nerStart = Date.now();
-    const entities = ner(doc.fullText);
-    timings.ner = Date.now() - nerStart;
+    let entities;
+    try {
+      const nerResult = await callWorkerNER(doc.fullText, ctx.input.media?.languageHint);
+      // Convert enhanced entities to legacy format for backward compatibility
+      entities = convertToLegacyEntities(nerResult.entities);
+      timings.ner = nerResult.timing;
+    } catch (error) {
+      console.warn('ML-based NER failed, falling back to basic NER:', error);
+      // Fallback to basic NER if ML service fails
+      entities = ner(doc.fullText);
+      timings.ner = Date.now() - nerStart;
+    }
     
     // Step 5: Build flags
     const flagsStart = Date.now();

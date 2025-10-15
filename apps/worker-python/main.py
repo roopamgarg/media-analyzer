@@ -5,13 +5,15 @@ from PIL import Image
 import io
 import time
 import os
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 import logging
 from pydantic import BaseModel
 from instagram_downloader import InstagramDownloader
 from audio_preprocessing import preprocess_audio
 from text_postprocessing import post_process_transcript
 from language_config import get_language_whisper_params
+from services.ner_service import ner_service
+from services.semantic_service import semantic_service
 
 # Configure logging first
 logging.basicConfig(level=logging.INFO)
@@ -43,6 +45,32 @@ class InstagramDownloadResponse(BaseModel):
     username: Optional[str] = None
     duration: Optional[float] = None
     error: Optional[str] = None
+
+# NER request/response models
+class NERRequest(BaseModel):
+    text: str
+    language: Optional[str] = 'en'
+    include_relationships: Optional[bool] = True
+
+class NERResponse(BaseModel):
+    entities: Dict[str, List[Dict[str, Any]]]
+    relationships: List[Dict[str, Any]]
+    metadata: Dict[str, Any]
+    timing: float
+
+# Semantic similarity request/response models
+class SemanticSimilarityRequest(BaseModel):
+    keywords: List[str]
+    language: Optional[str] = 'en'
+    cluster: Optional[bool] = True
+
+class SemanticSimilarityResponse(BaseModel):
+    clusters: List[Dict[str, Any]]
+    similarity_matrix: List[List[float]]
+    grouped_keywords: Dict[str, List[Any]]
+    embeddings_shape: tuple
+    metadata: Dict[str, Any]
+    timing: float
 
 # Initialize Whisper model lazily
 model = None
@@ -270,6 +298,84 @@ async def download_instagram(request: InstagramDownloadRequest):
             success=False,
             error=str(e)
         )
+
+@app.post("/ner", response_model=NERResponse)
+async def extract_entities(request: NERRequest):
+    """
+    Extract named entities from text using ML-based NER models.
+    
+    Args:
+        request: NER request containing text, language, and options
+    
+    Returns:
+        Extracted entities, relationships, and metadata
+    """
+    start_time = time.time()
+    
+    try:
+        logger.info(f"NER request received for {len(request.text)} characters in {request.language}")
+        
+        # Extract entities
+        result = ner_service.extract_entities(
+            text=request.text,
+            language=request.language,
+            include_relationships=request.include_relationships
+        )
+        
+        timing = (time.time() - start_time) * 1000  # Convert to milliseconds
+        
+        logger.info(f"NER completed in {timing:.2f}ms")
+        
+        return NERResponse(
+            entities=result['entities'],
+            relationships=result['relationships'],
+            metadata=result['metadata'],
+            timing=timing
+        )
+        
+    except Exception as e:
+        logger.error(f"NER failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"NER processing failed: {str(e)}")
+
+@app.post("/semantic-similarity", response_model=SemanticSimilarityResponse)
+async def compute_semantic_similarity(request: SemanticSimilarityRequest):
+    """
+    Compute semantic similarity between keywords and cluster them.
+    
+    Args:
+        request: Semantic similarity request containing keywords and options
+    
+    Returns:
+        Keyword clusters, similarity matrix, and grouped keywords
+    """
+    start_time = time.time()
+    
+    try:
+        logger.info(f"Semantic similarity request received for {len(request.keywords)} keywords in {request.language}")
+        
+        # Compute similarity and clustering
+        result = semantic_service.compute_similarity(
+            keywords=request.keywords,
+            language=request.language,
+            cluster=request.cluster
+        )
+        
+        timing = (time.time() - start_time) * 1000  # Convert to milliseconds
+        
+        logger.info(f"Semantic similarity computed in {timing:.2f}ms")
+        
+        return SemanticSimilarityResponse(
+            clusters=result['clusters'],
+            similarity_matrix=result['similarity_matrix'],
+            grouped_keywords=result['grouped_keywords'],
+            embeddings_shape=result['embeddings_shape'],
+            metadata=result.get('metadata', {}),
+            timing=timing
+        )
+        
+    except Exception as e:
+        logger.error(f"Semantic similarity failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Semantic similarity processing failed: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn

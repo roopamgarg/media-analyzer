@@ -2,6 +2,7 @@
 Test configuration and fixtures for the Python worker service
 """
 import pytest
+import pytest_asyncio
 import asyncio
 import tempfile
 import os
@@ -10,6 +11,7 @@ from unittest.mock import Mock, patch, MagicMock
 from fastapi.testclient import TestClient
 from PIL import Image
 import numpy as np
+import soundfile as sf
 
 from main import app
 from instagram_downloader import InstagramDownloader
@@ -27,6 +29,15 @@ def event_loop():
 def client():
     """Create a test client for the FastAPI app."""
     return TestClient(app)
+
+
+@pytest_asyncio.fixture
+async def async_client():
+    """Create an async test client for the FastAPI app."""
+    from httpx import AsyncClient, ASGITransport
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        yield ac
 
 
 @pytest.fixture

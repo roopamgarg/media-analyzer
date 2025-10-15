@@ -27,6 +27,7 @@ jest.mock('../../services/evidence', () => ({
 
 jest.mock('../../services/worker', () => ({
   callWorkerASR: jest.fn(),
+  callWorkerNER: jest.fn(),
 }));
 
 jest.mock('../../services/ocr', () => ({
@@ -36,6 +37,7 @@ jest.mock('../../services/ocr', () => ({
 jest.mock('../../services/nlp', () => ({
   buildTimedDoc: jest.fn(),
   ner: jest.fn(),
+  convertToLegacyEntities: jest.fn(),
 }));
 
 jest.mock('../../services/video-content-analyzer', () => ({
@@ -51,9 +53,9 @@ import { fetchAndExtract } from '../../services/media';
 import { buildFlags } from '../../services/rules';
 import { scoreAll } from '../../services/scoring';
 import { assembleEvidence } from '../../services/evidence';
-import { callWorkerASR } from '../../services/worker';
+import { callWorkerASR, callWorkerNER } from '../../services/worker';
 import { runOCR } from '../../services/ocr';
-import { buildTimedDoc, ner } from '../../services/nlp';
+import { buildTimedDoc, ner, convertToLegacyEntities } from '../../services/nlp';
 import { analyzeVideoContent } from '../../services/video-content-analyzer';
 import { persistAnalysis } from '../../db/analyses.repo';
 
@@ -62,9 +64,11 @@ const mockBuildFlags = buildFlags as jest.MockedFunction<typeof buildFlags>;
 const mockScoreAll = scoreAll as jest.MockedFunction<typeof scoreAll>;
 const mockAssembleEvidence = assembleEvidence as jest.MockedFunction<typeof assembleEvidence>;
 const mockCallWorkerASR = callWorkerASR as jest.MockedFunction<typeof callWorkerASR>;
+const mockCallWorkerNER = callWorkerNER as jest.MockedFunction<typeof callWorkerNER>;
 const mockRunOCR = runOCR as jest.MockedFunction<typeof runOCR>;
 const mockBuildTimedDoc = buildTimedDoc as jest.MockedFunction<typeof buildTimedDoc>;
 const mockNer = ner as jest.MockedFunction<typeof ner>;
+const mockConvertToLegacyEntities = convertToLegacyEntities as jest.MockedFunction<typeof convertToLegacyEntities>;
 const mockAnalyzeVideoContent = analyzeVideoContent as jest.MockedFunction<typeof analyzeVideoContent>;
 const mockPersistAnalysis = persistAnalysis as jest.MockedFunction<typeof persistAnalysis>;
 
@@ -275,6 +279,39 @@ describe('Analyze Sync Service', () => {
       mockBuildTimedDoc.mockReturnValue({
         fullText: 'Sample caption Sample speech Sample text',
         timeline: [],
+      });
+
+      mockCallWorkerNER.mockResolvedValue({
+        entities: {
+          persons: [],
+          organizations: [],
+          locations: [],
+          dates: [],
+          times: [],
+          money: [],
+          percent: [],
+          brands: [],
+          products: [],
+          influencers: [],
+          competitors: [],
+          regulated: [],
+          claims: [],
+          misc: [],
+          relationships: [],
+        },
+        relationships: [],
+        metadata: {
+          language: 'en',
+          total_entities: 0,
+          confidence_threshold: 0.7,
+        },
+        timing: 150,
+      });
+
+      mockConvertToLegacyEntities.mockReturnValue({
+        brands: [],
+        competitors: [],
+        regulated: [],
       });
 
       mockNer.mockReturnValue({

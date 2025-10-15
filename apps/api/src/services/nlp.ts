@@ -13,6 +13,48 @@ export interface Entities {
   regulated: string[];
 }
 
+// Enhanced entity structure from ML-based NER
+export interface EnhancedEntity {
+  text: string;
+  confidence: number;
+  category?: string;
+  brand?: string;
+}
+
+export interface EntityRelationship {
+  entity1: string;
+  entity2: string;
+  type: 'possession' | 'brand-product' | 'person-organization' | 'product-price';
+  confidence: number;
+}
+
+export interface EnhancedEntities {
+  // Standard entities
+  persons: EnhancedEntity[];
+  organizations: EnhancedEntity[];
+  locations: EnhancedEntity[];
+  dates: EnhancedEntity[];
+  times: EnhancedEntity[];
+  money: EnhancedEntity[];
+  percent: EnhancedEntity[];
+  
+  // Domain-specific entities
+  brands: EnhancedEntity[];
+  products: EnhancedEntity[];
+  influencers: EnhancedEntity[];
+  
+  // Analysis-specific entities
+  competitors: EnhancedEntity[];
+  regulated: EnhancedEntity[];
+  claims: EnhancedEntity[];
+  
+  // Miscellaneous
+  misc: EnhancedEntity[];
+  
+  // Relationships between entities
+  relationships: EntityRelationship[];
+}
+
 export function buildTimedDoc({
   caption,
   asr,
@@ -104,5 +146,16 @@ export function ner(text: string): Entities {
     brands,
     competitors,
     regulated,
+  };
+}
+
+/**
+ * Convert enhanced entities to legacy Entities format for backward compatibility
+ */
+export function convertToLegacyEntities(enhanced: EnhancedEntities): Entities {
+  return {
+    brands: enhanced.brands.map(e => e.text),
+    competitors: enhanced.competitors.map(e => e.text),
+    regulated: enhanced.regulated.map(e => e.text),
   };
 }
