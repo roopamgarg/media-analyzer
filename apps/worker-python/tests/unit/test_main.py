@@ -3,6 +3,7 @@ Unit tests for the main FastAPI application endpoints
 """
 import pytest
 import io
+import os
 from unittest.mock import patch, Mock
 from fastapi.testclient import TestClient
 from main import app
@@ -634,3 +635,353 @@ class TestRequestValidation:
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is False
+
+
+class TestWhisperModelEdgeCases:
+    """Test Whisper model edge cases and error handling."""
+
+    def test_whisper_model_invalid_size(self, client, sample_audio_file):
+        """Test Whisper model with invalid size parameter."""
+        files = {"file": ("test.wav", io.BytesIO(sample_audio_file), "audio/wav")}
+        
+        with patch('main.get_whisper_model') as mock_model:
+            mock_model.side_effect = Exception("Invalid model size")
+            
+            response = client.post("/asr", files=files)
+            assert response.status_code == 500
+
+    def test_whisper_model_loading_timeout(self, client, sample_audio_file):
+        """Test Whisper model loading timeout."""
+        files = {"file": ("test.wav", io.BytesIO(sample_audio_file), "audio/wav")}
+        
+        with patch('main.get_whisper_model') as mock_model:
+            mock_model.side_effect = TimeoutError("Model loading timeout")
+            
+            response = client.post("/asr", files=files)
+            assert response.status_code == 500
+
+    def test_whisper_model_memory_error(self, client, sample_audio_file):
+        """Test Whisper model memory error."""
+        files = {"file": ("test.wav", io.BytesIO(sample_audio_file), "audio/wav")}
+        
+        with patch('main.get_whisper_model') as mock_model:
+            mock_model.side_effect = RuntimeError("CUDA out of memory")
+            
+            response = client.post("/asr", files=files)
+            assert response.status_code == 500
+
+    def test_whisper_model_corrupted_audio(self, client):
+        """Test Whisper model with corrupted audio data."""
+        corrupted_audio = b"not audio data"
+        files = {"file": ("test.wav", io.BytesIO(corrupted_audio), "audio/wav")}
+        
+        with patch('main.get_whisper_model') as mock_model:
+            mock_model.return_value.transcribe.side_effect = Exception("Invalid audio format")
+            
+            response = client.post("/asr", files=files)
+            assert response.status_code == 500
+
+    def test_whisper_model_very_large_audio(self, client):
+        """Test Whisper model with very large audio file."""
+        # Create a large audio file (simulate)
+        large_audio = b"fake audio data" * 10000
+        files = {"file": ("large.wav", io.BytesIO(large_audio), "audio/wav")}
+        
+        with patch('main.get_whisper_model') as mock_model:
+            mock_model.return_value.transcribe.side_effect = Exception("Audio too large")
+            
+            response = client.post("/asr", files=files)
+            assert response.status_code == 500
+
+
+class TestASREdgeCases:
+    """Test ASR endpoint edge cases and error handling."""
+
+    def test_asr_empty_audio_file(self, client):
+        """Test ASR with empty audio file."""
+        empty_file = io.BytesIO(b"")
+        files = {"file": ("empty.wav", empty_file, "audio/wav")}
+        
+        response = client.post("/asr", files=files)
+        assert response.status_code in [200, 500]  # Depends on implementation
+
+    def test_asr_unsupported_audio_format(self, client):
+        """Test ASR with unsupported audio format."""
+        unsupported_audio = b"not audio data"
+        files = {"file": ("test.txt", io.BytesIO(unsupported_audio), "text/plain")}
+        
+        response = client.post("/asr", files=files)
+        assert response.status_code == 500
+
+    def test_asr_very_long_audio(self, client):
+        """Test ASR with very long audio file."""
+        # Simulate very long audio
+        long_audio = b"fake audio data" * 100000
+        files = {"file": ("long.wav", io.BytesIO(long_audio), "audio/wav")}
+        
+        with patch('main.get_whisper_model') as mock_model:
+            mock_model.return_value.transcribe.side_effect = Exception("Audio too long")
+            
+            response = client.post("/asr", files=files)
+            assert response.status_code == 500
+
+    def test_asr_preprocessing_failure(self, client, sample_audio_file):
+        """Test ASR when preprocessing fails."""
+        files = {"file": ("test.wav", io.BytesIO(sample_audio_file), "audio/wav")}
+        
+        with patch('main.preprocess_audio') as mock_preprocess:
+            mock_preprocess.side_effect = Exception("Preprocessing failed")
+            
+            response = client.post("/asr?enable_preprocessing=true", files=files)
+            assert response.status_code == 500
+
+    def test_asr_postprocessing_failure(self, client, sample_audio_file, mock_whisper_model):
+        """Test ASR when postprocessing fails."""
+        files = {"file": ("test.wav", io.BytesIO(sample_audio_file), "audio/wav")}
+        
+        with patch('main.post_process_transcript') as mock_postprocess:
+            mock_postprocess.side_effect = Exception("Postprocessing failed")
+            
+            response = client.post("/asr?enable_postprocessing=true", files=files)
+            assert response.status_code == 500
+
+    def test_asr_language_config_failure(self, client, sample_audio_file):
+        """Test ASR when language configuration fails."""
+        files = {"file": ("test.wav", io.BytesIO(sample_audio_file), "audio/wav")}
+        
+        with patch('main.get_language_whisper_params') as mock_lang_config:
+            mock_lang_config.side_effect = Exception("Language config failed")
+            
+            response = client.post("/asr?language=hi", files=files)
+            assert response.status_code == 500
+
+    def test_asr_concurrent_requests(self, client, sample_audio_file, mock_whisper_model):
+        """Test ASR with concurrent requests."""
+        files = {"file": ("test.wav", io.BytesIO(sample_audio_file), "audio/wav")}
+        
+        # This would need to be tested with actual concurrent requests
+        # For now, just test that the endpoint can handle multiple calls
+        response1 = client.post("/asr", files=files)
+        response2 = client.post("/asr", files=files)
+        
+        assert response1.status_code == 200
+        assert response2.status_code == 200
+
+    def test_asr_malformed_audio_headers(self, client):
+        """Test ASR with malformed audio file headers."""
+        malformed_audio = b"RIFF\x00\x00\x00\x00WAVE"  # Incomplete WAV header
+        files = {"file": ("malformed.wav", io.BytesIO(malformed_audio), "audio/wav")}
+        
+        with patch('main.get_whisper_model') as mock_model:
+            mock_model.return_value.transcribe.side_effect = Exception("Invalid audio format")
+            
+            response = client.post("/asr", files=files)
+            assert response.status_code == 500
+
+
+class TestOCREdgeCases:
+    """Test OCR endpoint edge cases and error handling."""
+
+    def test_ocr_corrupted_image_file(self, client):
+        """Test OCR with corrupted image file."""
+        corrupted_image = b"not image data"
+        files = {"files": ("corrupted.png", io.BytesIO(corrupted_image), "image/png")}
+        
+        response = client.post("/ocr", files=files)
+        assert response.status_code == 500
+
+    def test_ocr_unsupported_image_format(self, client):
+        """Test OCR with unsupported image format."""
+        unsupported_image = b"fake image data"
+        files = {"files": ("test.bmp", io.BytesIO(unsupported_image), "image/bmp")}
+        
+        with patch('main.pytesseract') as mock_tesseract:
+            mock_tesseract.image_to_string.side_effect = Exception("Unsupported format")
+            
+            response = client.post("/ocr", files=files)
+            assert response.status_code == 500
+
+    def test_ocr_empty_image(self, client):
+        """Test OCR with empty image file."""
+        empty_image = io.BytesIO(b"")
+        files = {"files": ("empty.png", empty_image, "image/png")}
+        
+        response = client.post("/ocr", files=files)
+        assert response.status_code == 500
+
+    def test_ocr_very_large_image(self, client):
+        """Test OCR with very large image file."""
+        # Simulate very large image
+        large_image = b"fake image data" * 100000
+        files = {"files": ("large.png", io.BytesIO(large_image), "image/png")}
+        
+        with patch('main.pytesseract') as mock_tesseract:
+            mock_tesseract.image_to_string.side_effect = Exception("Image too large")
+            
+            response = client.post("/ocr", files=files)
+            assert response.status_code == 500
+
+    def test_ocr_tesseract_not_installed(self, client, sample_image_file):
+        """Test OCR when Tesseract is not installed."""
+        files = {"files": ("test.png", io.BytesIO(sample_image_file), "image/png")}
+        
+        with patch('main.pytesseract') as mock_tesseract:
+            mock_tesseract.image_to_string.side_effect = FileNotFoundError("Tesseract not found")
+            
+            response = client.post("/ocr", files=files)
+            assert response.status_code == 500
+
+    def test_ocr_tesseract_timeout(self, client, sample_image_file):
+        """Test OCR when Tesseract times out."""
+        files = {"files": ("test.png", io.BytesIO(sample_image_file), "image/png")}
+        
+        with patch('main.pytesseract') as mock_tesseract:
+            mock_tesseract.image_to_string.side_effect = TimeoutError("Tesseract timeout")
+            
+            response = client.post("/ocr", files=files)
+            assert response.status_code == 500
+
+    def test_ocr_memory_error(self, client, sample_image_file):
+        """Test OCR with memory error."""
+        files = {"files": ("test.png", io.BytesIO(sample_image_file), "image/png")}
+        
+        with patch('main.pytesseract') as mock_tesseract:
+            mock_tesseract.image_to_string.side_effect = MemoryError("Out of memory")
+            
+            response = client.post("/ocr", files=files)
+            assert response.status_code == 500
+
+    def test_ocr_multiple_corrupted_files(self, client):
+        """Test OCR with multiple corrupted files."""
+        corrupted_image = b"not image data"
+        files = [
+            ("files", ("corrupted1.png", io.BytesIO(corrupted_image), "image/png")),
+            ("files", ("corrupted2.png", io.BytesIO(corrupted_image), "image/png"))
+        ]
+        
+        response = client.post("/ocr", files=files)
+        assert response.status_code == 500
+
+
+class TestEnvironmentVariableHandling:
+    """Test environment variable handling and overrides."""
+
+    def test_asr_environment_variable_override(self, client, sample_audio_file):
+        """Test ASR with environment variable overrides."""
+        with patch.dict(os.environ, {
+            'ASR_ENABLE_PREPROCESSING': 'true',
+            'ASR_PREPROCESSING_LEVEL': 'aggressive',
+            'ASR_ENABLE_POSTPROCESSING': 'true'
+        }):
+            files = {"file": ("test.wav", io.BytesIO(sample_audio_file), "audio/wav")}
+            
+            with patch('main.get_whisper_model') as mock_model:
+                # Create a proper mock segment object
+                mock_segment = Mock()
+                mock_segment.start = 0.0
+                mock_segment.end = 1.0
+                mock_segment.text = "test transcription"
+                
+                mock_info = Mock()
+                mock_info.language = "en"
+                
+                mock_model.return_value.transcribe.return_value = ([mock_segment], mock_info)
+                
+                response = client.post("/asr", files=files)
+                assert response.status_code == 200
+
+    def test_whisper_model_environment_variables(self):
+        """Test Whisper model with environment variables."""
+        with patch.dict(os.environ, {
+            'WHISPER_MODEL_SIZE': 'small',
+            'WHISPER_COMPUTE_TYPE': 'int8'
+        }):
+            with patch('main.WhisperModel') as mock_whisper:
+                mock_whisper.return_value = Mock()
+                
+                from main import get_whisper_model
+                get_whisper_model()
+                
+                mock_whisper.assert_called_once_with("small", compute_type="int8")
+
+    def test_environment_variable_loading_failure(self):
+        """Test behavior when environment variable loading fails."""
+        with patch('main.load_dotenv', side_effect=Exception("Failed to load .env")):
+            # Should not raise exception, just log warning
+            import main
+            assert hasattr(main, 'app')
+
+
+class TestFileHandlingEdgeCases:
+    """Test file handling edge cases."""
+
+    def test_asr_file_read_error(self, client):
+        """Test ASR with file read error."""
+        mock_file = Mock()
+        mock_file.read.side_effect = Exception("File read error")
+        
+        with patch('main.UploadFile', return_value=mock_file):
+            files = {"file": ("test.wav", io.BytesIO(b"fake audio"), "audio/wav")}
+            response = client.post("/asr", files=files)
+            assert response.status_code == 500
+
+    def test_asr_file_size_limit(self, client):
+        """Test ASR with file size limit exceeded."""
+        # Simulate very large file
+        large_file = io.BytesIO(b"fake audio data" * 1000000)
+        files = {"file": ("large.wav", large_file, "audio/wav")}
+        
+        with patch('main.get_whisper_model') as mock_model:
+            mock_model.return_value.transcribe.side_effect = Exception("File too large")
+            
+            response = client.post("/asr", files=files)
+            assert response.status_code == 500
+
+    def test_ocr_file_permission_error(self, client):
+        """Test OCR with file permission error."""
+        with patch('main.pytesseract') as mock_tesseract:
+            mock_tesseract.image_to_string.side_effect = PermissionError("Permission denied")
+            
+            files = {"files": ("test.png", io.BytesIO(b"fake image"), "image/png")}
+            response = client.post("/ocr", files=files)
+            assert response.status_code == 500
+
+
+class TestResponseValidation:
+    """Test response validation and edge cases."""
+
+    def test_asr_response_serialization_error(self, client, sample_audio_file, mock_whisper_model):
+        """Test ASR response serialization error."""
+        files = {"file": ("test.wav", io.BytesIO(sample_audio_file), "audio/wav")}
+        
+        # Mock the specific JSON serialization in the response
+        with patch('starlette.responses.JSONResponse.render') as mock_render:
+            mock_render.side_effect = Exception("Serialization error")
+            
+            # The exception should be raised during response rendering
+            with pytest.raises(Exception, match="Serialization error"):
+                client.post("/asr", files=files)
+
+    def test_ocr_response_serialization_error(self, client, sample_image_file, mock_pytesseract):
+        """Test OCR response serialization error."""
+        files = {"files": ("test.png", io.BytesIO(sample_image_file), "image/png")}
+        
+        # Mock the specific JSON serialization in the response
+        with patch('starlette.responses.JSONResponse.render') as mock_render:
+            mock_render.side_effect = Exception("Serialization error")
+            
+            # The exception should be raised during response rendering
+            with pytest.raises(Exception, match="Serialization error"):
+                client.post("/ocr", files=files)
+
+    def test_instagram_response_serialization_error(self, client, sample_instagram_url, mock_instagram_downloader):
+        """Test Instagram response serialization error."""
+        request_data = {"url": sample_instagram_url}
+        
+        # Mock the specific JSON serialization in the response
+        with patch('starlette.responses.JSONResponse.render') as mock_render:
+            mock_render.side_effect = Exception("Serialization error")
+            
+            # The exception should be raised during response rendering
+            with pytest.raises(Exception, match="Serialization error"):
+                client.post("/download-instagram", json=request_data)

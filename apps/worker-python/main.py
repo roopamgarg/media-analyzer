@@ -71,6 +71,7 @@ class SemanticSimilarityResponse(BaseModel):
     embeddings_shape: tuple
     metadata: Dict[str, Any]
     timing: float
+    error: Optional[str] = None
 
 # Initialize Whisper model lazily
 model = None
@@ -370,7 +371,8 @@ async def compute_semantic_similarity(request: SemanticSimilarityRequest):
             grouped_keywords=result['grouped_keywords'],
             embeddings_shape=result['embeddings_shape'],
             metadata=result.get('metadata', {}),
-            timing=timing
+            timing=timing,
+            error=result.get('error')
         )
         
     except Exception as e:

@@ -69,7 +69,7 @@ def extract_cookies_to_file(output_file: str = None):
         print("pip install yt-dlp")
         raise
 
-def test_cookies(cookies_file: str):
+def validate_cookies(cookies_file: str):
     """Test if the extracted cookies work with Instagram"""
     try:
         cmd = [
@@ -88,6 +88,13 @@ def test_cookies(cookies_file: str):
         print(f"❌ Cookies test failed: {e}")
         print(f"stderr: {e.stderr}")
         return False
+    except FileNotFoundError:
+        print("❌ yt-dlp not found. Please install it first:")
+        print("pip install yt-dlp")
+        return False
+    except subprocess.TimeoutExpired:
+        print("❌ Network timeout. Please check your internet connection.")
+        return False
 
 def main():
     """Main function to extract and test cookies"""
@@ -99,7 +106,7 @@ def main():
         cookies_file = extract_cookies_to_file()
         
         # Test cookies
-        if test_cookies(cookies_file):
+        if validate_cookies(cookies_file):
             print(f"\n✅ Success! You can now use these cookies with yt-dlp:")
             print(f"   --cookies {cookies_file}")
             print(f"\nOr use browser cookies directly:")
