@@ -22,7 +22,10 @@
     "test:unit": "./run-tests.sh --specific node unit && ./run-tests.sh --specific python unit",
     "test:integration": "./run-tests.sh --specific node integration && ./run-tests.sh --specific python integration",
     "test:api": "./run-tests.sh --node",
-    "test:worker": "./run-tests.sh --python"
+    "test:worker": "./run-tests.sh --python",
+    "docs:serve": "./serve-swagger.sh",
+    "docs:validate": "./validate-openapi.sh",
+    "docs:generate-client": "npx @openapitools/openapi-generator-cli generate -i openapi.yaml -g typescript-axios -o ./generated/client"
   },
   "devDependencies": {
     "turbo": "^1.10.12",

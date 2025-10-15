@@ -1,0 +1,1697 @@
+openapi: 3.0.3
+info:
+  title: Media Analyzer API
+  description: |
+    Comprehensive API for analyzing social media content, particularly Instagram Reels, with advanced capabilities including:
+    - **Content Analysis**: Full compliance checking and brand safety analysis
+    - **Keyword Extraction**: Advanced semantic keyword extraction with sentiment analysis
+    - **Media Processing**: Audio transcription (ASR) and optical character recognition (OCR)
+    - **Named Entity Recognition**: ML-based entity extraction and semantic similarity
+    - **Multilingual Support**: English, Hindi, and Hinglish content processing
+    
+    ## System Architecture
+    
+    The system consists of three main components:
+    
+    1. **Main API Server (Node.js/Fastify)** - Port 3000
+    2. **Python Worker (FastAPI)** - Port 8000
+    3. **Database & Queue System** - SQLite with Redis
+    
+    ## Authentication
+    
+    All protected endpoints require JWT authentication via Bearer token in the Authorization header.
+    
+  version: 1.0.0
+  contact:
+    name: Media Analyzer API Support
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:3000
+    description: Main API Server (Development)
+  - url: http://localhost:8000
+    description: Python Worker Server (Development)
+  - url: https://api.media-analyzer.com
+    description: Production Server
+
+tags:
+  - name: Authentication
+    description: User authentication and token management
+  - name: Health
+    description: System health checks and monitoring
+  - name: Analysis
+    description: Content analysis and compliance checking
+  - name: Keywords
+    description: Keyword extraction and semantic analysis
+  - name: Worker - Media Processing
+    description: Python worker endpoints for media processing
+  - name: Worker - NLP
+    description: Python worker endpoints for NLP operations
+
+paths:
+  # ==================== Authentication Endpoints ====================
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register new user
+      description: Creates a new user account and returns a JWT token
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+            examples:
+              basic:
+                summary: Basic registration
+                value:
+                  email: user@example.com
+                  password: password123
+                  projectId: project-123
+                  userId: user-456
+      responses:
+        '200':
+          description: Successfully registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      description: Authenticates an existing user and returns a JWT token
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            examples:
+              basic:
+                summary: Basic login
+                value:
+                  email: user@example.com
+                  password: password123
+      responses:
+        '200':
+          description: Successfully authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /auth/demo-token:
+    post:
+      tags:
+        - Authentication
+      summary: Get demo token
+      description: Generates a demo JWT token for testing purposes
+      operationId: getDemoToken
+      responses:
+        '200':
+          description: Demo token generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /auth/verify:
+    get:
+      tags:
+        - Authentication
+      summary: Verify token
+      description: Validates a JWT token and returns user information
+      operationId: verifyToken
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Token is valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenVerifyResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  # ==================== Health Check Endpoints ====================
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Basic health check
+      description: Returns basic service status and version information
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /health/ready:
+    get:
+      tags:
+        - Health
+      summary: Readiness check
+      description: Performs comprehensive health checks on all system components
+      operationId: readinessCheck
+      responses:
+        '200':
+          description: Service is ready
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadinessResponse'
+        '503':
+          description: Service is not ready
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadinessErrorResponse'
+
+  /health/config:
+    get:
+      tags:
+        - Health
+      summary: Configuration info
+      description: Returns runtime configuration information for debugging
+      operationId: getConfig
+      responses:
+        '200':
+          description: Configuration retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigResponse'
+
+  # ==================== Analysis Endpoints ====================
+  /v1/analyze:
+    post:
+      tags:
+        - Analysis
+      summary: Analyze content
+      description: |
+        Analyzes content for compliance, brand safety, and quality. 
+        Supports both synchronous and asynchronous processing.
+        
+        **Processing Modes:**
+        - **Synchronous**: Returns results immediately (< 30 seconds)
+        - **Asynchronous**: Returns analysis ID for polling
+      operationId: analyzeContent
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalysisRequest'
+            examples:
+              instagram:
+                summary: Instagram Reel Analysis
+                value:
+                  input:
+                    instagramReelUrl: https://www.instagram.com/reel/ABC123DEF456/
+                  brandKit:
+                    inline:
+                      brandName: MyBrand
+                      category: Beauty
+                      palette: ["#FF0000", "#00FF00", "#0000FF"]
+                      doDonts:
+                        do: ["Use bright colors", "Show product benefits"]
+                        dont: ["Use competitor logos", "Make false claims"]
+                  category: Beauty
+              url:
+                summary: URL-based Analysis
+                value:
+                  input:
+                    url: https://example.com/video.mp4
+                  brandKit:
+                    brandKitId: brand-kit-123
+                  category: Health
+      responses:
+        '200':
+          description: Synchronous analysis completed
+          headers:
+            x-analysis-id:
+              schema:
+                type: string
+              description: Analysis ID for reference
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisResult'
+        '202':
+          description: Asynchronous analysis queued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisAccepted'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /v1/analyses/{id}:
+    get:
+      tags:
+        - Analysis
+      summary: Get analysis status
+      description: Retrieves the status and results of an analysis
+      operationId: getAnalysisStatus
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Analysis ID
+          schema:
+            type: string
+          example: an_abc123def456
+      responses:
+        '200':
+          description: Analysis status retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisStatus'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  # ==================== Keywords Endpoints ====================
+  /v1/keywords/extract:
+    post:
+      tags:
+        - Keywords
+      summary: Extract keywords (Basic)
+      description: |
+        Extracts searchable keywords from Instagram Reels for content discovery.
+        
+        **Features:**
+        - Primary and secondary keywords
+        - Hashtags and mentions
+        - Topic categorization
+        - Searchable terms optimization
+      operationId: extractKeywords
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KeywordExtractionRequest'
+            examples:
+              basic:
+                summary: Basic extraction
+                value:
+                  instagramReelUrl: https://www.instagram.com/reel/ABC123DEF456/
+                  languageHint: en
+              with_cookies:
+                summary: With Chrome cookies
+                value:
+                  instagramReelUrl: https://www.instagram.com/reel/ABC123DEF456/
+                  languageHint: en
+                  cookieOptions:
+                    browserCookies: chrome
+      responses:
+        '200':
+          description: Keywords extracted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeywordExtractionResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /v1/keywords/extract-enhanced:
+    post:
+      tags:
+        - Keywords
+      summary: Extract keywords (Enhanced)
+      description: |
+        Enhanced keyword extraction with advanced semantic analysis.
+        
+        **Additional Features:**
+        - N-gram extraction and phrase analysis
+        - Sentiment analysis with emotions
+        - Intent detection
+        - Entity extraction (brands, products, people, etc.)
+        - Multilingual support with auto-detection
+      operationId: extractKeywordsEnhanced
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnhancedKeywordExtractionRequest'
+            examples:
+              full_features:
+                summary: Full enhanced features
+                value:
+                  instagramReelUrl: https://www.instagram.com/reel/ABC123DEF456/
+                  languageHint: en
+                  options:
+                    includeNgrams: true
+                    includeSentiment: true
+                    includeIntent: true
+                    includeEntities: true
+                  cookieOptions:
+                    browserCookies: chrome
+      responses:
+        '200':
+          description: Enhanced keywords extracted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnhancedKeywordExtractionResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /v1/keywords/health:
+    get:
+      tags:
+        - Keywords
+      summary: Keyword service health
+      description: Returns keyword extraction service health status
+      operationId: keywordHealth
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  service:
+                    type: string
+                    example: keyword-extractor
+                  timestamp:
+                    type: string
+                    format: date-time
+
+  # ==================== Python Worker Endpoints ====================
+  /asr:
+    post:
+      tags:
+        - Worker - Media Processing
+      summary: Speech-to-text transcription
+      description: |
+        Automatic Speech Recognition (ASR) using Whisper model.
+        
+        **Features:**
+        - Multiple language support
+        - Audio preprocessing (noise reduction, normalization)
+        - Text post-processing (capitalization, punctuation)
+        - Configurable model size and compute type
+      operationId: asr
+      servers:
+        - url: http://localhost:8000
+          description: Python Worker Server
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Audio file to transcribe
+                language:
+                  type: string
+                  description: Language hint (e.g., "en", "hi", "es")
+                  example: en
+                enable_preprocessing:
+                  type: boolean
+                  description: Enable audio preprocessing
+                preprocessing_level:
+                  type: string
+                  enum: [minimal, standard, aggressive]
+                  description: Preprocessing level
+                enable_postprocessing:
+                  type: boolean
+                  description: Enable text post-processing
+      responses:
+        '200':
+          description: Transcription completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ASRResponse'
+        '500':
+          description: ASR processing failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /ocr:
+    post:
+      tags:
+        - Worker - Media Processing
+      summary: Optical character recognition
+      description: Extracts text from image frames using Tesseract OCR
+      operationId: ocr
+      servers:
+        - url: http://localhost:8000
+          description: Python Worker Server
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - files
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                  description: Image files for OCR processing
+      responses:
+        '200':
+          description: OCR completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OCRResponse'
+        '500':
+          description: OCR processing failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /download-instagram:
+    post:
+      tags:
+        - Worker - Media Processing
+      summary: Download Instagram Reel
+      description: |
+        Downloads Instagram Reel video with metadata.
+        
+        **Cookie Options:**
+        - Browser cookies (chrome, firefox, safari, edge, opera, brave)
+        - Cookies file (Netscape format)
+      operationId: downloadInstagram
+      servers:
+        - url: http://localhost:8000
+          description: Python Worker Server
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InstagramDownloadRequest'
+            examples:
+              basic:
+                summary: Basic download
+                value:
+                  url: https://www.instagram.com/reel/ABC123DEF456/
+              with_browser_cookies:
+                summary: With browser cookies
+                value:
+                  url: https://www.instagram.com/reel/ABC123DEF456/
+                  browser_cookies: chrome
+              with_cookies_file:
+                summary: With cookies file
+                value:
+                  url: https://www.instagram.com/reel/ABC123DEF456/
+                  cookies_file: /path/to/cookies.txt
+      responses:
+        '200':
+          description: Download completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstagramDownloadResponse'
+
+  /ner:
+    post:
+      tags:
+        - Worker - NLP
+      summary: Named Entity Recognition
+      description: |
+        Extracts named entities from text using ML-based NER models.
+        
+        **Supported Languages:** English, Hindi, Hinglish
+        
+        **Entity Types:** Person, Organization, Location, Date, Time, Money, etc.
+      operationId: ner
+      servers:
+        - url: http://localhost:8000
+          description: Python Worker Server
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NERRequest'
+            examples:
+              english:
+                summary: English text
+                value:
+                  text: "Apple Inc. is headquartered in Cupertino, California."
+                  language: en
+                  include_relationships: true
+              hindi:
+                summary: Hindi text
+                value:
+                  text: "मुंबई भारत का सबसे बड़ा शहर है।"
+                  language: hi
+                  include_relationships: true
+      responses:
+        '200':
+          description: NER completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NERResponse'
+        '500':
+          description: NER processing failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /semantic-similarity:
+    post:
+      tags:
+        - Worker - NLP
+      summary: Semantic similarity analysis
+      description: |
+        Computes semantic similarity between keywords and clusters them.
+        
+        **Features:**
+        - Multilingual embeddings
+        - Keyword clustering
+        - Similarity matrix computation
+        - Grouped keyword recommendations
+      operationId: semanticSimilarity
+      servers:
+        - url: http://localhost:8000
+          description: Python Worker Server
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SemanticSimilarityRequest'
+            examples:
+              basic:
+                summary: Basic similarity
+                value:
+                  keywords: ["fashion", "style", "clothing", "trendy", "design"]
+                  language: en
+                  cluster: true
+      responses:
+        '200':
+          description: Similarity computed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SemanticSimilarityResponse'
+        '500':
+          description: Processing failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+# ==================== Components ====================
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from /auth/login or /auth/demo-token
+
+  schemas:
+    # ==================== Authentication Schemas ====================
+    RegisterRequest:
+      type: object
+      required:
+        - email
+        - password
+        - projectId
+        - userId
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          minLength: 6
+          example: password123
+        projectId:
+          type: string
+          minLength: 1
+          example: project-123
+        userId:
+          type: string
+          minLength: 1
+          example: user-456
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          minLength: 6
+          example: password123
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        user:
+          type: object
+          properties:
+            projectId:
+              type: string
+              example: demo-project-123
+            userId:
+              type: string
+              example: demo-user-456
+            email:
+              type: string
+              example: demo@example.com
+        expiresIn:
+          type: integer
+          description: Token expiration in seconds
+          example: 86400
+
+    TokenVerifyResponse:
+      type: object
+      properties:
+        valid:
+          type: boolean
+          example: true
+        user:
+          type: object
+          properties:
+            projectId:
+              type: string
+              example: demo-project-123
+            userId:
+              type: string
+              example: demo-user-456
+            email:
+              type: string
+              example: demo@example.com
+
+    # ==================== Health Schemas ====================
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: ok
+        timestamp:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00.000Z"
+        version:
+          type: string
+          example: "1.0.0"
+
+    ReadinessResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: ready
+        checks:
+          type: object
+          properties:
+            database:
+              type: string
+              example: ok
+            redis:
+              type: string
+              example: ok
+            worker:
+              type: string
+              example: ok
+
+    ReadinessErrorResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: not_ready
+        checks:
+          type: object
+          properties:
+            database:
+              type: string
+            redis:
+              type: string
+            worker:
+              type: string
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              component:
+                type: string
+              message:
+                type: string
+
+    ConfigResponse:
+      type: object
+      properties:
+        ANALYZE_SYNC_MAX_SECONDS:
+          type: integer
+          example: 30
+        WORKER_PYTHON_URL:
+          type: string
+          example: http://localhost:8000
+
+    # ==================== Analysis Schemas ====================
+    AnalysisRequest:
+      type: object
+      required:
+        - input
+        - brandKit
+        - category
+      properties:
+        input:
+          type: object
+          oneOf:
+            - required: [url]
+            - required: [instagramReelUrl]
+            - required: [media]
+          properties:
+            url:
+              type: string
+              format: uri
+              example: https://example.com/video.mp4
+            instagramReelUrl:
+              type: string
+              format: uri
+              pattern: '^https?://(www\.)?instagram\.com/(reel|reels|p)/[A-Za-z0-9_-]+/?$'
+              example: https://www.instagram.com/reel/ABC123DEF456/
+            media:
+              type: object
+              properties:
+                videoBase64:
+                  type: string
+                  format: byte
+                  description: Base64 encoded video data
+                caption:
+                  type: string
+                  nullable: true
+                languageHint:
+                  type: string
+                  example: en
+        brandKit:
+          type: object
+          oneOf:
+            - required: [brandKitId]
+            - required: [inline]
+          properties:
+            brandKitId:
+              type: string
+              example: brand-kit-123
+            inline:
+              $ref: '#/components/schemas/InlineBrandKit'
+        category:
+          type: string
+          enum: [Beauty, Health, Finance, Gaming, Other]
+          example: Beauty
+        options:
+          type: object
+          properties:
+            returnPdf:
+              type: boolean
+              default: false
+            evidence:
+              type: object
+              properties:
+                screenshots:
+                  type: boolean
+                  default: true
+                transcriptSpans:
+                  type: boolean
+                  default: true
+                frames:
+                  type: array
+                  items:
+                    type: integer
+                  default: [0, 1, 3, 5, 10]
+            cookieOptions:
+              $ref: '#/components/schemas/CookieOptions'
+        idempotencyKey:
+          type: string
+          format: uuid
+          description: UUID for idempotent requests
+
+    InlineBrandKit:
+      type: object
+      required:
+        - brandName
+        - palette
+        - doDonts
+      properties:
+        brandName:
+          type: string
+          minLength: 1
+          example: MyBrand
+        category:
+          type: string
+          enum: [Beauty, Health, Finance, Gaming, Other]
+          example: Beauty
+        palette:
+          type: array
+          items:
+            type: string
+            pattern: '^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$'
+          minItems: 1
+          example: ["#FF0000", "#00FF00", "#0000FF"]
+        doDonts:
+          type: object
+          required:
+            - do
+            - dont
+          properties:
+            do:
+              type: array
+              items:
+                type: string
+              example: ["Use bright colors", "Show product benefits"]
+            dont:
+              type: array
+              items:
+                type: string
+              example: ["Use competitor logos", "Make false claims"]
+        competitors:
+          type: array
+          items:
+            type: string
+          default: []
+          example: ["CompetitorA", "CompetitorB"]
+        keywords:
+          type: object
+          properties:
+            tone:
+              type: array
+              items:
+                type: string
+              default: []
+              example: ["professional", "trustworthy"]
+            avoid:
+              type: array
+              items:
+                type: string
+              default: []
+              example: ["cheap", "low-quality"]
+
+    AnalysisResult:
+      type: object
+      properties:
+        analysisId:
+          type: string
+          example: an_abc123def456
+        mode:
+          type: string
+          enum: [sync]
+          example: sync
+        status:
+          type: string
+          enum: [completed]
+          example: completed
+        scores:
+          type: object
+          properties:
+            risk:
+              type: number
+              format: float
+              example: 2.5
+            vibe:
+              type: number
+              format: float
+              example: 7.8
+            labels:
+              type: object
+              properties:
+                risk:
+                  type: string
+                  example: Low Risk
+                vibe:
+                  type: string
+                  example: Positive
+            components:
+              type: object
+              additionalProperties:
+                type: number
+              example:
+                brand_safety: 8.5
+                compliance: 7.2
+                quality: 8.0
+                engagement: 6.8
+        flags:
+          type: array
+          items:
+            $ref: '#/components/schemas/Flag'
+        evidence:
+          $ref: '#/components/schemas/Evidence'
+        videoContent:
+          $ref: '#/components/schemas/VideoContentAnalysis'
+        artifacts:
+          type: object
+          properties:
+            pdfUrl:
+              type: string
+              nullable: true
+              format: uri
+        timings:
+          $ref: '#/components/schemas/Timings'
+        version:
+          type: string
+          example: "1.0.0"
+
+    AnalysisAccepted:
+      type: object
+      properties:
+        analysisId:
+          type: string
+          example: an_abc123def456
+        mode:
+          type: string
+          enum: [async]
+          example: async
+        status:
+          type: string
+          enum: [queued]
+          example: queued
+        pollAfterMs:
+          type: integer
+          example: 3000
+
+    AnalysisStatus:
+      type: object
+      properties:
+        analysisId:
+          type: string
+          example: an_abc123def456
+        status:
+          type: string
+          enum: [queued, processing, completed, failed]
+          example: completed
+        progress:
+          type: integer
+          minimum: 0
+          maximum: 100
+          example: 100
+        error:
+          type: string
+          nullable: true
+        result:
+          $ref: '#/components/schemas/AnalysisResult'
+
+    Flag:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [disclosure, claim, brand_safety, competitor_conflict, visual_identity, other]
+          example: disclosure
+        code:
+          type: string
+          example: MISSING_DISCLOSURE
+        severity:
+          type: string
+          enum: [low, medium, high, critical]
+          example: medium
+        message:
+          type: string
+          example: Sponsored content missing disclosure
+        evidence:
+          type: object
+          additionalProperties: true
+
+    Evidence:
+      type: object
+      properties:
+        frames:
+          type: array
+          items:
+            type: object
+            properties:
+              t:
+                type: integer
+                description: Frame timestamp
+              imageUrl:
+                type: string
+                format: uri
+              ocr:
+                type: string
+        caption:
+          type: string
+          nullable: true
+        transcript:
+          type: string
+          nullable: true
+
+    VideoContentAnalysis:
+      type: object
+      properties:
+        content:
+          type: object
+          properties:
+            summary:
+              type: string
+            mainMessage:
+              type: string
+            keyTopics:
+              type: array
+              items:
+                type: string
+            contentType:
+              type: string
+              enum: [educational, entertainment, promotional, lifestyle, tutorial, story, other]
+            targetAudience:
+              type: string
+        hook:
+          type: object
+          properties:
+            openingHook:
+              type: string
+            hookType:
+              type: string
+              enum: [question, statement, visual, story, trend, challenge, other]
+            engagementElements:
+              type: array
+              items:
+                type: string
+            callToAction:
+              type: string
+        production:
+          type: object
+          properties:
+            visualQuality:
+              type: string
+              enum: [low, medium, high, professional]
+            audioQuality:
+              type: string
+              enum: [low, medium, high, professional]
+            editingStyle:
+              type: string
+              enum: [minimal, moderate, dynamic, professional]
+            colorScheme:
+              type: array
+              items:
+                type: string
+            visualElements:
+              type: array
+              items:
+                type: string
+        performance:
+          type: object
+          properties:
+            pacing:
+              type: string
+              enum: [slow, moderate, fast, varied]
+            energyLevel:
+              type: string
+              enum: [low, medium, high]
+            emotionalTone:
+              type: string
+              enum: [positive, neutral, negative, mixed]
+            authenticity:
+              type: string
+              enum: [low, medium, high]
+        brandAlignment:
+          type: object
+          properties:
+            brandFit:
+              type: number
+              minimum: 0
+              maximum: 10
+            messagingConsistency:
+              type: number
+              minimum: 0
+              maximum: 10
+            visualConsistency:
+              type: number
+              minimum: 0
+              maximum: 10
+            toneAlignment:
+              type: number
+              minimum: 0
+              maximum: 10
+        recommendations:
+          type: object
+          properties:
+            strengths:
+              type: array
+              items:
+                type: string
+            improvements:
+              type: array
+              items:
+                type: string
+            suggestedActions:
+              type: array
+              items:
+                type: string
+
+    # ==================== Keywords Schemas ====================
+    KeywordExtractionRequest:
+      type: object
+      required:
+        - instagramReelUrl
+      properties:
+        instagramReelUrl:
+          type: string
+          format: uri
+          pattern: '^https?://(www\.)?instagram\.com/(reel|reels|p)/[A-Za-z0-9_-]+/?$'
+          example: https://www.instagram.com/reel/ABC123DEF456/
+        languageHint:
+          type: string
+          example: en
+        cookieOptions:
+          $ref: '#/components/schemas/CookieOptions'
+
+    EnhancedKeywordExtractionRequest:
+      allOf:
+        - $ref: '#/components/schemas/KeywordExtractionRequest'
+        - type: object
+          properties:
+            options:
+              type: object
+              properties:
+                includeNgrams:
+                  type: boolean
+                  default: true
+                includeSentiment:
+                  type: boolean
+                  default: true
+                includeIntent:
+                  type: boolean
+                  default: true
+                includeEntities:
+                  type: boolean
+                  default: true
+            async:
+              type: boolean
+              default: false
+
+    KeywordExtractionResponse:
+      type: object
+      properties:
+        keywords:
+          type: object
+          properties:
+            primary:
+              type: array
+              items:
+                type: string
+              example: ["fashion", "style", "outfit", "trendy"]
+            secondary:
+              type: array
+              items:
+                type: string
+              example: ["clothes", "accessories", "shopping", "beauty"]
+            hashtags:
+              type: array
+              items:
+                type: string
+              example: ["#fashion", "#style", "#ootd", "#trending"]
+            mentions:
+              type: array
+              items:
+                type: string
+              example: ["@brand", "@influencer"]
+            topics:
+              type: array
+              items:
+                type: string
+              example: ["fashion", "lifestyle"]
+        metadata:
+          type: object
+          properties:
+            caption:
+              type: string
+            transcript:
+              type: string
+            ocrText:
+              type: string
+            duration:
+              type: number
+            username:
+              type: string
+        searchableTerms:
+          type: array
+          items:
+            type: string
+        timings:
+          $ref: '#/components/schemas/Timings'
+
+    EnhancedKeywordExtractionResponse:
+      allOf:
+        - $ref: '#/components/schemas/KeywordExtractionResponse'
+        - type: object
+          properties:
+            keywords:
+              type: object
+              properties:
+                phrases:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      text:
+                        type: string
+                      frequency:
+                        type: integer
+                      significance:
+                        type: number
+            topics:
+              type: object
+              properties:
+                primary:
+                  type: object
+                  properties:
+                    category:
+                      type: string
+                    subcategory:
+                      type: string
+                    confidence:
+                      type: number
+                secondary:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      category:
+                        type: string
+                      confidence:
+                        type: number
+            sentiment:
+              type: object
+              properties:
+                overall:
+                  type: string
+                  enum: [positive, neutral, negative]
+                score:
+                  type: number
+                  minimum: -5
+                  maximum: 5
+                comparative:
+                  type: number
+                emotions:
+                  type: array
+                  items:
+                    type: string
+            intent:
+              type: object
+              properties:
+                primary:
+                  type: string
+                  enum: [educate, entertain, promote, inspire, inform]
+                secondary:
+                  type: array
+                  items:
+                    type: string
+                confidence:
+                  type: number
+            entities:
+              type: object
+              properties:
+                brands:
+                  type: array
+                  items:
+                    type: string
+                products:
+                  type: array
+                  items:
+                    type: string
+                people:
+                  type: array
+                  items:
+                    type: string
+                prices:
+                  type: array
+                  items:
+                    type: string
+                locations:
+                  type: array
+                  items:
+                    type: string
+
+    # ==================== Python Worker Schemas ====================
+    ASRResponse:
+      type: object
+      properties:
+        language:
+          type: string
+          example: en
+        segments:
+          type: array
+          items:
+            type: object
+            properties:
+              tStart:
+                type: number
+                format: float
+              tEnd:
+                type: number
+                format: float
+              text:
+                type: string
+        timing:
+          type: number
+          description: Processing time in milliseconds
+        preprocessing_enabled:
+          type: boolean
+        preprocessing_level:
+          type: string
+          enum: [minimal, standard, aggressive]
+        postprocessing_enabled:
+          type: boolean
+        model_size:
+          type: string
+        compute_type:
+          type: string
+
+    OCRResponse:
+      type: object
+      properties:
+        frames:
+          type: array
+          items:
+            type: object
+            properties:
+              t:
+                type: integer
+              boxes:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    box:
+                      type: array
+                      items:
+                        type: integer
+                      minItems: 4
+                      maxItems: 4
+                    text:
+                      type: string
+        timing:
+          type: number
+          description: Processing time in milliseconds
+
+    InstagramDownloadRequest:
+      type: object
+      required:
+        - url
+      properties:
+        url:
+          type: string
+          format: uri
+          example: https://www.instagram.com/reel/ABC123DEF456/
+        output_path:
+          type: string
+          nullable: true
+        browser_cookies:
+          type: string
+          enum: [chrome, firefox, safari, edge, opera, brave]
+          nullable: true
+        cookies_file:
+          type: string
+          nullable: true
+
+    InstagramDownloadResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        video_path:
+          type: string
+          nullable: true
+        caption:
+          type: string
+          nullable: true
+        username:
+          type: string
+          nullable: true
+        duration:
+          type: number
+          nullable: true
+        error:
+          type: string
+          nullable: true
+
+    NERRequest:
+      type: object
+      required:
+        - text
+      properties:
+        text:
+          type: string
+          example: "Apple Inc. is headquartered in Cupertino, California."
+        language:
+          type: string
+          default: en
+          example: en
+        include_relationships:
+          type: boolean
+          default: true
+
+    NERResponse:
+      type: object
+      properties:
+        entities:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: object
+        relationships:
+          type: array
+          items:
+            type: object
+        metadata:
+          type: object
+        timing:
+          type: number
+          description: Processing time in milliseconds
+
+    SemanticSimilarityRequest:
+      type: object
+      required:
+        - keywords
+      properties:
+        keywords:
+          type: array
+          items:
+            type: string
+          example: ["fashion", "style", "clothing", "trendy", "design"]
+        language:
+          type: string
+          default: en
+          example: en
+        cluster:
+          type: boolean
+          default: true
+
+    SemanticSimilarityResponse:
+      type: object
+      properties:
+        clusters:
+          type: array
+          items:
+            type: object
+        similarity_matrix:
+          type: array
+          items:
+            type: array
+            items:
+              type: number
+        grouped_keywords:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: object
+        embeddings_shape:
+          type: array
+          items:
+            type: integer
+        metadata:
+          type: object
+        timing:
+          type: number
+        error:
+          type: string
+          nullable: true
+
+    # ==================== Common Schemas ====================
+    CookieOptions:
+      type: object
+      properties:
+        browserCookies:
+          type: string
+          enum: [chrome, firefox, safari, edge, opera, brave]
+        cookiesFile:
+          type: string
+
+    Timings:
+      type: object
+      properties:
+        totalMs:
+          type: integer
+          description: Total processing time in milliseconds
+        stages:
+          type: object
+          additionalProperties:
+            type: integer
+          example:
+            extract: 800
+            asr: 1200
+            ocr: 300
+            processing: 200
+
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: string
+          example: INTERNAL_ERROR
+        message:
+          type: string
+          example: An error occurred
+        details:
+          type: string
+
+  # ==================== Reusable Responses ====================
+  responses:
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: string
+                example: VALIDATION_ERROR
+              message:
+                type: string
+                example: Invalid request data
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    path:
+                      type: array
+                      items:
+                        type: string
+                    message:
+                      type: string
+
+    UnauthorizedError:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: string
+                example: UNAUTHORIZED
+              message:
+                type: string
+                example: Invalid or missing authentication token
+
+    NotFoundError:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: string
+                example: NOT_FOUND
+              message:
+                type: string
+                example: Resource not found
+
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: string
+                example: INTERNAL_ERROR
+              message:
+                type: string
+                example: An internal error occurred
+              details:
+                type: string
+

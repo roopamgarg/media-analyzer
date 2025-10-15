@@ -84,6 +84,29 @@ docker-compose up
 
 This starts all services with hot reloading enabled.
 
+## 📚 API Documentation
+
+**Complete API documentation is available in OpenAPI/Swagger format:**
+
+- **OpenAPI Specification**: `openapi.yaml`
+- **Interactive Documentation**: Run `./serve-swagger.sh` to view in Swagger UI
+- **Documentation Guide**: See `SWAGGER_DOCUMENTATION.md` for details
+
+### Quick Documentation Access
+
+```bash
+# View interactive Swagger UI
+./serve-swagger.sh
+
+# Or use Docker
+docker run -p 8080:8080 \
+  -v $(pwd)/openapi.yaml:/openapi.yaml \
+  -e SWAGGER_JSON=/openapi.yaml \
+  swaggerapi/swagger-ui
+```
+
+Visit `http://localhost:8080` to explore the API documentation.
+
 ## API Usage
 
 ### Authentication
@@ -91,6 +114,11 @@ This starts all services with hot reloading enabled.
 All requests require a JWT token in the Authorization header:
 ```
 Authorization: Bearer <jwt-token>
+```
+
+**Get a demo token:**
+```bash
+curl -X POST http://localhost:3000/auth/demo-token
 ```
 
 ### Analyze Media
@@ -303,13 +331,48 @@ kubectl apply -f infra/k8s/
 - Log levels: `error`, `warn`, `info`, `debug`
 - Redacted sensitive data (API keys, tokens)
 
+## 📚 Documentation
+
+### Complete API Documentation
+
+We provide comprehensive API documentation in multiple formats:
+
+| Resource | Description | Quick Access |
+|----------|-------------|--------------|
+| **OpenAPI/Swagger** | Interactive API docs | `npm run docs:serve` |
+| **Quick Reference** | Cheat sheet for common tasks | [API_QUICK_REFERENCE.md](API_QUICK_REFERENCE.md) |
+| **Documentation Index** | Complete doc overview | [API_DOCUMENTATION_INDEX.md](API_DOCUMENTATION_INDEX.md) |
+| **Swagger Guide** | How to use OpenAPI spec | [SWAGGER_DOCUMENTATION.md](SWAGGER_DOCUMENTATION.md) |
+| **Postman Collection** | Pre-configured API requests | Import `postman-collection-v2.json` |
+
+### Specialized Guides
+
+- **Keyword Extraction**: [KEYWORD_EXTRACTION_API.md](KEYWORD_EXTRACTION_API.md)
+- **Instagram Setup**: [INSTAGRAM_COOKIES_GUIDE.md](INSTAGRAM_COOKIES_GUIDE.md)
+- **NER Implementation**: [NER_IMPLEMENTATION_SUMMARY.md](NER_IMPLEMENTATION_SUMMARY.md)
+- **Testing**: [TEST_RUNNER.md](TEST_RUNNER.md)
+
+### Quick Documentation Commands
+
+```bash
+# View interactive Swagger UI
+npm run docs:serve
+
+# Validate OpenAPI specification
+npm run docs:validate
+
+# Generate TypeScript API client
+npm run docs:generate-client
+```
+
 ## Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
 4. Add tests
-5. Submit a pull request
+5. Update API documentation in `openapi.yaml` if needed
+6. Submit a pull request
 
 ## License
 
