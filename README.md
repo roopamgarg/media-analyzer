@@ -84,13 +84,18 @@ docker-compose up
 
 This starts all services with hot reloading enabled.
 
-## 📚 API Documentation
+## 📚 Documentation
 
-**Complete API documentation is available in OpenAPI/Swagger format:**
+All documentation has been organized in the `/docs` folder:
 
-- **OpenAPI Specification**: `openapi.yaml`
-- **Interactive Documentation**: Run `./serve-swagger.sh` to view in Swagger UI
-- **Documentation Guide**: See `SWAGGER_DOCUMENTATION.md` for details
+| Document | Description |
+|----------|-------------|
+| [API Documentation](docs/api-documentation.md) | Complete API reference with examples |
+| [Keyword Extraction](docs/keyword-extraction.md) | Keyword extraction API guide |
+| [Instagram Cookies](docs/instagram-cookies.md) | Instagram authentication setup |
+| [NER Implementation](docs/ner-implementation.md) | Named Entity Recognition details |
+| [Testing Guide](docs/testing.md) | How to run tests |
+| [Postman Guide](docs/postman-guide.md) | Using Postman collections |
 
 ### Quick Documentation Access
 
@@ -105,7 +110,7 @@ docker run -p 8080:8080 \
   swaggerapi/swagger-ui
 ```
 
-Visit `http://localhost:8080` to explore the API documentation.
+Visit `http://localhost:8080` to explore the interactive API documentation.
 
 ## API Usage
 
@@ -331,28 +336,9 @@ kubectl apply -f infra/k8s/
 - Log levels: `error`, `warn`, `info`, `debug`
 - Redacted sensitive data (API keys, tokens)
 
-## 📚 Documentation
+## 📖 Additional Resources
 
-### Complete API Documentation
-
-We provide comprehensive API documentation in multiple formats:
-
-| Resource | Description | Quick Access |
-|----------|-------------|--------------|
-| **OpenAPI/Swagger** | Interactive API docs | `npm run docs:serve` |
-| **Quick Reference** | Cheat sheet for common tasks | [API_QUICK_REFERENCE.md](API_QUICK_REFERENCE.md) |
-| **Documentation Index** | Complete doc overview | [API_DOCUMENTATION_INDEX.md](API_DOCUMENTATION_INDEX.md) |
-| **Swagger Guide** | How to use OpenAPI spec | [SWAGGER_DOCUMENTATION.md](SWAGGER_DOCUMENTATION.md) |
-| **Postman Collection** | Pre-configured API requests | Import `postman-collection-v2.json` |
-
-### Specialized Guides
-
-- **Keyword Extraction**: [KEYWORD_EXTRACTION_API.md](KEYWORD_EXTRACTION_API.md)
-- **Instagram Setup**: [INSTAGRAM_COOKIES_GUIDE.md](INSTAGRAM_COOKIES_GUIDE.md)
-- **NER Implementation**: [NER_IMPLEMENTATION_SUMMARY.md](NER_IMPLEMENTATION_SUMMARY.md)
-- **Testing**: [TEST_RUNNER.md](TEST_RUNNER.md)
-
-### Quick Documentation Commands
+### Documentation Commands
 
 ```bash
 # View interactive Swagger UI
@@ -364,6 +350,12 @@ npm run docs:validate
 # Generate TypeScript API client
 npm run docs:generate-client
 ```
+
+### External Resources
+
+- [OpenAPI Specification](https://swagger.io/specification/)
+- [Swagger Editor](https://editor.swagger.io/)
+- [Postman Documentation](https://learning.postman.com/docs/)
 
 ## Contributing
 

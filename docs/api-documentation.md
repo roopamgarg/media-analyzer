@@ -1,36 +1,65 @@
-# Media Analyzer API - Quick Reference
+# API Documentation
 
-## 🚀 Quick Start
+Complete API reference for the Media Analyzer platform.
+
+## Table of Contents
+- [Quick Start](#quick-start)
+- [Authentication](#authentication)
+- [Endpoints](#endpoints)
+- [OpenAPI/Swagger](#openapi-swagger)
+- [Error Handling](#error-handling)
+
+## Quick Start
+
+### View Interactive Documentation
 
 ```bash
-# Start Swagger UI documentation
+# Start Swagger UI
 npm run docs:serve
 # or
 ./serve-swagger.sh
 
-# Validate OpenAPI spec
-npm run docs:validate
+# Visit http://localhost:8080
 ```
 
-## 🔑 Authentication
+### Get Authentication Token
 
-### Get Demo Token
+```bash
+# Get demo token
+curl -X POST http://localhost:3000/auth/demo-token
+```
+
+## Base URLs
+
+- **Main API**: `http://localhost:3000`
+- **Python Worker**: `http://localhost:8000`
+
+## Authentication
+
+All API endpoints (except health checks) require JWT authentication:
+
+```bash
+Authorization: Bearer <jwt-token>
+```
+
+### Get Token
+
+**Demo Token (for testing):**
 ```bash
 curl -X POST http://localhost:3000/auth/demo-token
 ```
 
-### Use Token
+**User Login:**
 ```bash
-curl -H "Authorization: Bearer <token>" http://localhost:3000/health
+curl -X POST http://localhost:3000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "user@example.com", "password": "password"}'
 ```
 
-## 📍 API Endpoints
-
-### Base URLs
-- **Main API**: `http://localhost:3000`
-- **Python Worker**: `http://localhost:8000`
+## Endpoints
 
 ### Authentication (`/auth`)
+
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/auth/register` | POST | Register new user |
@@ -39,6 +68,7 @@ curl -H "Authorization: Bearer <token>" http://localhost:3000/health
 | `/auth/verify` | GET | Verify JWT token |
 
 ### Health (`/health`)
+
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/health` | GET | Basic health check |
@@ -46,34 +76,39 @@ curl -H "Authorization: Bearer <token>" http://localhost:3000/health
 | `/health/config` | GET | Configuration info |
 
 ### Analysis (`/v1`)
+
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/v1/analyze` | POST | Analyze content (sync/async) |
 | `/v1/analyses/:id` | GET | Get analysis status |
 
 ### Keywords (`/v1/keywords`)
+
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/v1/keywords/extract` | POST | Basic keyword extraction |
-| `/v1/keywords/extract-enhanced` | POST | Enhanced extraction |
+| `/v1/keywords/extract-enhanced` | POST | Enhanced extraction with NLP |
 | `/v1/keywords/health` | GET | Service health |
 
 ### Python Worker - Media
+
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/asr` | POST | Speech-to-text |
 | `/ocr` | POST | Text extraction |
-| `/download-instagram` | POST | Download Reel |
+| `/download-instagram` | POST | Download Instagram Reel |
 
 ### Python Worker - NLP
+
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/ner` | POST | Named Entity Recognition |
 | `/semantic-similarity` | POST | Semantic clustering |
 
-## 💡 Common Examples
+## Common Examples
 
-### 1. Analyze Instagram Reel
+### Analyze Instagram Reel
+
 ```bash
 curl -X POST http://localhost:3000/v1/analyze \
   -H "Authorization: Bearer <token>" \
@@ -97,7 +132,8 @@ curl -X POST http://localhost:3000/v1/analyze \
   }'
 ```
 
-### 2. Extract Keywords
+### Extract Keywords
+
 ```bash
 curl -X POST http://localhost:3000/v1/keywords/extract \
   -H "Authorization: Bearer <token>" \
@@ -111,42 +147,78 @@ curl -X POST http://localhost:3000/v1/keywords/extract \
   }'
 ```
 
-### 3. Enhanced Keywords with NLP
+## OpenAPI/Swagger
+
+### Specification File
+
+Complete OpenAPI 3.0 specification: `openapi.yaml`
+
+### View Interactive Docs
+
+**Option 1: Local Swagger UI**
 ```bash
-curl -X POST http://localhost:3000/v1/keywords/extract-enhanced \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "instagramReelUrl": "https://www.instagram.com/reel/ABC123/",
-    "options": {
-      "includeNgrams": true,
-      "includeSentiment": true,
-      "includeIntent": true,
-      "includeEntities": true
-    }
-  }'
+npm run docs:serve
+# Visit http://localhost:8080
 ```
 
-### 4. Speech-to-Text
+**Option 2: Docker**
 ```bash
-curl -X POST http://localhost:8000/asr \
-  -F "file=@audio.mp4" \
-  -F "language=en" \
-  -F "enable_preprocessing=true"
+docker run -p 8080:8080 \
+  -v $(pwd)/openapi.yaml:/openapi.yaml \
+  -e SWAGGER_JSON=/openapi.yaml \
+  swaggerapi/swagger-ui
 ```
 
-### 5. Named Entity Recognition
+**Option 3: Online Editor**
+1. Go to [Swagger Editor](https://editor.swagger.io/)
+2. Import `openapi.yaml`
+
+### Generate API Clients
+
+**TypeScript/JavaScript:**
 ```bash
-curl -X POST http://localhost:8000/ner \
-  -H "Content-Type: application/json" \
-  -d '{
-    "text": "Apple Inc. is headquartered in Cupertino, California.",
-    "language": "en",
-    "include_relationships": true
-  }'
+npx @openapitools/openapi-generator-cli generate \
+  -i openapi.yaml \
+  -g typescript-axios \
+  -o ./generated/client
 ```
 
-## 🚨 Error Codes
+**Python:**
+```bash
+openapi-generator-cli generate \
+  -i openapi.yaml \
+  -g python \
+  -o ./generated/python-client
+```
+
+### Validate Specification
+
+```bash
+npm run docs:validate
+# or
+./validate-openapi.sh
+```
+
+### Import to Postman
+
+1. Open Postman
+2. Click **Import**
+3. Select `openapi.yaml`
+4. All endpoints auto-configured
+
+## Error Handling
+
+### Error Response Format
+
+```json
+{
+  "code": "ERROR_CODE",
+  "message": "Human-readable error message",
+  "details": "Additional context"
+}
+```
+
+### Common Error Codes
 
 | Code | Status | Description |
 |------|--------|-------------|
@@ -156,20 +228,20 @@ curl -X POST http://localhost:8000/ner \
 | `RATE_LIMIT_EXCEEDED` | 429 | Too many requests |
 | `INTERNAL_ERROR` | 500 | Server error |
 
-## 🌍 Language Support
+## Language Support
 
 - **English (en)**: Full support
 - **Hindi (hi)**: Native support
 - **Hinglish (hi-en)**: Mixed content
 - **Auto-detect**: Automatic language detection
 
-## 📊 Rate Limits
+## Rate Limits
 
 - **Default**: 60 requests/min
 - **Instagram**: 10 requests/min
 - **Authentication**: 10 requests/min
 
-## 🛠️ NPM Scripts
+## NPM Scripts
 
 ```bash
 # Documentation
@@ -187,37 +259,10 @@ npm run test:api                 # Test API
 npm run test:worker              # Test Python worker
 ```
 
-## 📚 Documentation Files
+## Response Formats
 
-| File | Purpose |
-|------|---------|
-| `openapi.yaml` | Complete API specification |
-| `API_DOCUMENTATION_INDEX.md` | Documentation index |
-| `SWAGGER_DOCUMENTATION.md` | Swagger usage guide |
-| `API_QUICK_REFERENCE.md` | This file (quick reference) |
+### Success Response
 
-## 🔗 Quick Links
-
-- **Swagger UI**: `http://localhost:8080` (after running `npm run docs:serve`)
-- **Main API**: `http://localhost:3000`
-- **Python Worker**: `http://localhost:8000`
-- **Health Check**: `http://localhost:3000/health`
-
-## 💻 Client Generation
-
-```bash
-# TypeScript/Axios
-npx @openapitools/openapi-generator-cli generate \
-  -i openapi.yaml -g typescript-axios -o ./generated/client
-
-# Python
-openapi-generator-cli generate \
-  -i openapi.yaml -g python -o ./generated/python-client
-```
-
-## 📦 Response Format
-
-### Success
 ```json
 {
   "data": { ... },
@@ -226,7 +271,8 @@ openapi-generator-cli generate \
 }
 ```
 
-### Error
+### Error Response
+
 ```json
 {
   "code": "ERROR_CODE",
@@ -235,6 +281,17 @@ openapi-generator-cli generate \
 }
 ```
 
----
+## Quick Links
 
-*For complete documentation, run `npm run docs:serve` and visit http://localhost:8080*
+- **Swagger UI**: http://localhost:8080 (after `npm run docs:serve`)
+- **Main API**: http://localhost:3000
+- **Python Worker**: http://localhost:8000
+- **Health Check**: http://localhost:3000/health
+
+## See Also
+
+- [Keyword Extraction](keyword-extraction.md) - Detailed keyword API guide
+- [Instagram Cookies](instagram-cookies.md) - Instagram authentication setup
+- [Testing Guide](testing.md) - How to test the API
+- [Postman Guide](postman-guide.md) - Using Postman collections
+
