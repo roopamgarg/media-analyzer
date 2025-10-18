@@ -2,6 +2,7 @@ import { CreateAnalysisRequest } from '@media-analyzer/contracts';
 import { downloadVideo, writeBase64Video, extractFrames, extractAudio, getVideoDuration } from '@media-analyzer/lib-node';
 import { config } from '../config';
 import { downloadInstagramReel, isValidInstagramReelUrl } from './instagram';
+import { downloadShortVideo, isValidShortVideoUrl } from './video-platform';
 
 export interface MediaExtraction {
   frames: Array<{ t: number; buffer: Buffer; ocrText?: string }>;
@@ -18,7 +19,7 @@ export async function fetchAndExtract(ctx: {
   
   // Resolve input to file
   if (ctx.input.instagramReelUrl) {
-    // Handle Instagram Reel
+    // Handle Instagram Reel (backward compatibility)
     if (!isValidInstagramReelUrl(ctx.input.instagramReelUrl)) {
       throw new Error('Invalid Instagram Reel URL format');
     }
@@ -31,6 +32,20 @@ export async function fetchAndExtract(ctx: {
     const reelData = await downloadInstagramReel(ctx.input.instagramReelUrl, browserCookies, cookiesFile);
     videoPath = reelData.videoPath;
     caption = reelData.caption;
+  } else if (ctx.input.shortVideoUrl) {
+    // Handle short video (Instagram Reel or YouTube Shorts)
+    if (!isValidShortVideoUrl(ctx.input.shortVideoUrl)) {
+      throw new Error('Invalid short video URL format');
+    }
+    
+    // Extract cookie options from context
+    const cookieOptions = ctx.options.cookieOptions;
+    const browserCookies = cookieOptions?.browserCookies;
+    const cookiesFile = cookieOptions?.cookiesFile;
+    
+    const shortVideoData = await downloadShortVideo(ctx.input.shortVideoUrl, browserCookies, cookiesFile);
+    videoPath = shortVideoData.videoPath;
+    caption = shortVideoData.caption;
   } else if (ctx.input.url) {
     // Handle regular URL
     videoPath = await downloadVideo(ctx.input.url);

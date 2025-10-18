@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Media Analyzer API",
-    "description": "Complete collection for testing the Media Analyzer API including Instagram Reel analysis with cookie support, keyword extraction endpoints, Python worker endpoints, and all authentication flows.",
+    "description": "Complete collection for testing the Media Analyzer API including Instagram Reel and YouTube Shorts analysis with cookie support, keyword extraction endpoints, Python worker endpoints, and all authentication flows.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -147,6 +147,33 @@
         "body": {
           "mode": "raw",
           "raw": "{\n  \"input\": {\n    \"instagramReelUrl\": \"{{instagram_reel_url}}\"\n  },\n  \"brandKit\": {\n    \"inline\": {\n      \"brandName\": \"TestBrand\",\n      \"palette\": [\"#FF0000\", \"#00FF00\", \"#0000FF\"],\n      \"doDonts\": {\n        \"do\": [\"Use our brand colors\", \"Be positive and engaging\"],\n        \"dont\": [\"Mention competitors\", \"Make health claims\"]\n      },\n      \"competitors\": [\"CompetitorA\", \"CompetitorB\"],\n      \"keywords\": {\n        \"tone\": [\"friendly\", \"professional\", \"innovative\"],\n        \"avoid\": [\"aggressive\", \"negative\", \"misleading\"]\n      }\n    }\n  },\n  \"category\": \"Beauty\",\n  \"options\": {\n    \"returnPdf\": false,\n    \"evidence\": {\n      \"screenshots\": true,\n      \"transcriptSpans\": true,\n      \"frames\": [0, 1, 3, 5, 10]\n    }\n  }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/v1/analyze",
+          "host": ["{{base_url}}"],
+          "path": ["v1", "analyze"]
+        }
+      }
+    },
+    {
+      "name": "Analyze YouTube Shorts (Basic)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"input\": {\n    \"shortVideoUrl\": \"{{youtube_shorts_url}}\"\n  },\n  \"brandKit\": {\n    \"inline\": {\n      \"brandName\": \"TestBrand\",\n      \"palette\": [\"#FF0000\", \"#00FF00\", \"#0000FF\"],\n      \"doDonts\": {\n        \"do\": [\"Use our brand colors\", \"Be positive and engaging\"],\n        \"dont\": [\"Mention competitors\", \"Make health claims\"]\n      },\n      \"competitors\": [\"CompetitorA\", \"CompetitorB\"],\n      \"keywords\": {\n        \"tone\": [\"friendly\", \"professional\", \"innovative\"],\n        \"avoid\": [\"aggressive\", \"negative\", \"misleading\"]\n      }\n    }\n  },\n  \"category\": \"Beauty\",\n  \"options\": {\n    \"returnPdf\": false,\n    \"evidence\": {\n      \"screenshots\": true,\n      \"transcriptSpans\": true,\n      \"frames\": [0, 1, 3, 5, 10]\n    }\n  }\n}"
         },
         "url": {
           "raw": "{{base_url}}/v1/analyze",
@@ -352,6 +379,50 @@
       }
     },
     {
+      "name": "Python Worker - Download Short Video (YouTube Shorts)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"url\": \"{{youtube_shorts_url}}\"\n}"
+        },
+        "url": {
+          "raw": "{{worker_python_url}}/download-short-video",
+          "host": ["{{worker_python_url}}"],
+          "path": ["download-short-video"]
+        }
+      }
+    },
+    {
+      "name": "Python Worker - Download Short Video (Instagram Reel)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"url\": \"{{instagram_reel_url}}\"\n}"
+        },
+        "url": {
+          "raw": "{{worker_python_url}}/download-short-video",
+          "host": ["{{worker_python_url}}"],
+          "path": ["download-short-video"]
+        }
+      }
+    },
+    {
       "name": "Python Worker - ASR (Speech Recognition)",
       "request": {
         "method": "POST",
@@ -433,6 +504,33 @@
       }
     },
     {
+      "name": "Extract Keywords (YouTube Shorts)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"shortVideoUrl\": \"{{youtube_shorts_url}}\",\n  \"languageHint\": \"en\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/keywords/extract",
+          "host": ["{{base_url}}"],
+          "path": ["keywords", "extract"]
+        }
+      }
+    },
+    {
       "name": "Extract Keywords (with Chrome Cookies)",
       "request": {
         "method": "POST",
@@ -505,6 +603,33 @@
         "body": {
           "mode": "raw",
           "raw": "{\n  \"instagramReelUrl\": \"{{instagram_reel_url}}\",\n  \"languageHint\": \"en\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/v1/keywords/extract-enhanced",
+          "host": ["{{base_url}}"],
+          "path": ["v1", "keywords", "extract-enhanced"]
+        }
+      }
+    },
+    {
+      "name": "Extract Enhanced Keywords (YouTube Shorts)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"shortVideoUrl\": \"{{youtube_shorts_url}}\",\n  \"languageHint\": \"en\",\n  \"options\": {\n    \"includeNgrams\": true,\n    \"includeSentiment\": true,\n    \"includeIntent\": true,\n    \"includeEntities\": true\n  }\n}"
         },
         "url": {
           "raw": "{{base_url}}/v1/keywords/extract-enhanced",
@@ -681,6 +806,10 @@
     {
       "key": "instagram_reel_url",
       "value": "https://www.instagram.com/reels/DO3i-MviVuG/"
+    },
+    {
+      "key": "youtube_shorts_url",
+      "value": "https://www.youtube.com/shorts/ABC123DEF456"
     },
     {
       "key": "cookies_file_path",

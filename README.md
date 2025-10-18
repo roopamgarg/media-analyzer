@@ -90,7 +90,8 @@ All documentation has been organized in the `/docs` folder:
 
 | Document | Description |
 |----------|-------------|
-| [API Documentation](docs/api-documentation.md) | Complete API reference with examples |
+| [API Reference](docs/api-reference.md) | **Complete reference for all 17 API endpoints** - detailed explanations, examples, use cases |
+| [API Documentation](docs/api-documentation.md) | Quick API reference with authentication and endpoints |
 | [Keyword Extraction](docs/keyword-extraction.md) | Keyword extraction API guide |
 | [Instagram Cookies](docs/instagram-cookies.md) | Instagram authentication setup |
 | [NER Implementation](docs/ner-implementation.md) | Named Entity Recognition details |

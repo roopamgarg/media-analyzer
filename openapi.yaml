@@ -329,10 +329,15 @@ paths:
             schema:
               $ref: '#/components/schemas/KeywordExtractionRequest'
             examples:
-              basic:
-                summary: Basic extraction
+              instagram_basic:
+                summary: Instagram Reel extraction
                 value:
                   instagramReelUrl: https://www.instagram.com/reel/ABC123DEF456/
+                  languageHint: en
+              youtube_shorts:
+                summary: YouTube Shorts extraction
+                value:
+                  shortVideoUrl: https://www.youtube.com/shorts/ABC123DEF456
                   languageHint: en
               with_cookies:
                 summary: With Chrome cookies
@@ -379,8 +384,8 @@ paths:
             schema:
               $ref: '#/components/schemas/EnhancedKeywordExtractionRequest'
             examples:
-              full_features:
-                summary: Full enhanced features
+              instagram_full_features:
+                summary: Instagram Reel with full enhanced features
                 value:
                   instagramReelUrl: https://www.instagram.com/reel/ABC123DEF456/
                   languageHint: en
@@ -391,6 +396,16 @@ paths:
                     includeEntities: true
                   cookieOptions:
                     browserCookies: chrome
+              youtube_shorts_enhanced:
+                summary: YouTube Shorts with enhanced features
+                value:
+                  shortVideoUrl: https://www.youtube.com/shorts/ABC123DEF456
+                  languageHint: en
+                  options:
+                    includeNgrams: true
+                    includeSentiment: true
+                    includeIntent: true
+                    includeEntities: true
       responses:
         '200':
           description: Enhanced keywords extracted successfully
@@ -839,6 +854,7 @@ components:
           oneOf:
             - required: [url]
             - required: [instagramReelUrl]
+            - required: [shortVideoUrl]
             - required: [media]
           properties:
             url:
@@ -850,6 +866,12 @@ components:
               format: uri
               pattern: '^https?://(www\.)?instagram\.com/(reel|reels|p)/[A-Za-z0-9_-]+/?$'
               example: https://www.instagram.com/reel/ABC123DEF456/
+            shortVideoUrl:
+              type: string
+              format: uri
+              pattern: '^https?://((www\.)?instagram\.com/(reel|reels|p)/[A-Za-z0-9_-]+/?|(www\.)?youtube\.com/shorts/[A-Za-z0-9_-]+|youtu\.be/[A-Za-z0-9_-]+)$'
+              example: https://www.youtube.com/shorts/ABC123DEF456
+              description: "Instagram Reel or YouTube Shorts URL"
             media:
               type: object
               properties:
@@ -1218,14 +1240,21 @@ components:
     # ==================== Keywords Schemas ====================
     KeywordExtractionRequest:
       type: object
-      required:
-        - instagramReelUrl
+      oneOf:
+        - required: [instagramReelUrl]
+        - required: [shortVideoUrl]
       properties:
         instagramReelUrl:
           type: string
           format: uri
           pattern: '^https?://(www\.)?instagram\.com/(reel|reels|p)/[A-Za-z0-9_-]+/?$'
           example: https://www.instagram.com/reel/ABC123DEF456/
+        shortVideoUrl:
+          type: string
+          format: uri
+          pattern: '^https?://((www\.)?instagram\.com/(reel|reels|p)/[A-Za-z0-9_-]+/?|(www\.)?youtube\.com/shorts/[A-Za-z0-9_-]+|youtu\.be/[A-Za-z0-9_-]+)$'
+          example: https://www.youtube.com/shorts/ABC123DEF456
+          description: "Instagram Reel or YouTube Shorts URL"
         languageHint:
           type: string
           example: en

@@ -9,6 +9,7 @@ from typing import List, Optional, Dict, Any
 import logging
 from pydantic import BaseModel
 from instagram_downloader import InstagramDownloader
+from video_downloader import VideoDownloader
 from audio_preprocessing import preprocess_audio
 from text_postprocessing import post_process_transcript
 from language_config import get_language_whisper_params
@@ -44,6 +45,25 @@ class InstagramDownloadResponse(BaseModel):
     caption: Optional[str] = None
     username: Optional[str] = None
     duration: Optional[float] = None
+    error: Optional[str] = None
+
+class ShortVideoDownloadRequest(BaseModel):
+    url: str
+    output_path: Optional[str] = None
+    browser_cookies: Optional[str] = None  # e.g., 'chrome', 'firefox', 'safari'
+    cookies_file: Optional[str] = None     # Path to cookies.txt file
+
+class ShortVideoDownloadResponse(BaseModel):
+    success: bool
+    video_path: Optional[str] = None
+    caption: Optional[str] = None
+    username: Optional[str] = None
+    duration: Optional[float] = None
+    view_count: Optional[int] = None
+    like_count: Optional[int] = None
+    upload_date: Optional[str] = None
+    thumbnail: Optional[str] = None
+    webpage_url: Optional[str] = None
     error: Optional[str] = None
 
 # NER request/response models
@@ -296,6 +316,44 @@ async def download_instagram(request: InstagramDownloadRequest):
     except Exception as e:
         logger.error(f"Instagram download failed: {str(e)}")
         return InstagramDownloadResponse(
+            success=False,
+            error=str(e)
+        )
+
+@app.post("/download-short-video", response_model=ShortVideoDownloadResponse)
+async def download_short_video(request: ShortVideoDownloadRequest):
+    """Download short video (Instagram Reel or YouTube Shorts)"""
+    start_time = time.time()
+    
+    try:
+        # Initialize downloader with cookie options
+        downloader = VideoDownloader(
+            browser_cookies=request.browser_cookies,
+            cookies_file=request.cookies_file
+        )
+        
+        # Download the short video
+        result = downloader.download_video(request.url, request.output_path)
+        
+        processing_time = time.time() - start_time
+        logger.info(f"Short video download completed in {processing_time:.2f}s")
+        
+        return ShortVideoDownloadResponse(
+            success=True,
+            video_path=result['video_path'],
+            caption=result['caption'],
+            username=result['username'],
+            duration=result['duration'],
+            view_count=result['view_count'],
+            like_count=result['like_count'],
+            upload_date=result['upload_date'],
+            thumbnail=result['thumbnail'],
+            webpage_url=result['webpage_url']
+        )
+        
+    except Exception as e:
+        logger.error(f"Short video download failed: {str(e)}")
+        return ShortVideoDownloadResponse(
             success=False,
             error=str(e)
         )

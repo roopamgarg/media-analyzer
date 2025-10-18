@@ -14,9 +14,11 @@ import {
   classifyTopicsMultilingual,
   SupportedLanguage 
 } from './language';
+import { isValidShortVideoUrl } from './video-platform';
 
 export interface EnhancedKeywordExtractionRequest {
-  instagramReelUrl: string;
+  instagramReelUrl?: string;
+  shortVideoUrl?: string;
   languageHint?: string;
   cookieOptions?: {
     browserCookies?: 'chrome' | 'firefox' | 'safari' | 'edge' | 'opera' | 'brave';
@@ -122,9 +124,22 @@ export async function extractKeywordsEnhanced(request: EnhancedKeywordExtraction
   const timings: Record<string, number> = {};
 
   try {
-    // Validate Instagram URL
-    if (!isValidInstagramReelUrl(request.instagramReelUrl)) {
+    // Validate input - must have either instagramReelUrl or shortVideoUrl
+    if (!request.instagramReelUrl && !request.shortVideoUrl) {
+      throw new Error('Provide either instagramReelUrl or shortVideoUrl');
+    }
+    
+    if (request.instagramReelUrl && request.shortVideoUrl) {
+      throw new Error('Provide either instagramReelUrl or shortVideoUrl, not both');
+    }
+
+    // Validate URL format
+    if (request.instagramReelUrl && !isValidInstagramReelUrl(request.instagramReelUrl)) {
       throw new Error('Invalid Instagram Reel URL format');
+    }
+    
+    if (request.shortVideoUrl && !isValidShortVideoUrl(request.shortVideoUrl)) {
+      throw new Error('Invalid short video URL format');
     }
 
     // Step 1: Download and extract media
@@ -134,6 +149,7 @@ export async function extractKeywordsEnhanced(request: EnhancedKeywordExtraction
       mediaData = await fetchAndExtract({
         input: {
           instagramReelUrl: request.instagramReelUrl,
+          shortVideoUrl: request.shortVideoUrl,
           media: {
             languageHint: request.languageHint,
           },

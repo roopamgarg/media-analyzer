@@ -14,12 +14,31 @@ const KeywordExtractionRequestSchema = z.object({
       return instagramPatterns.some(pattern => pattern.test(url));
     },
     { message: "Must be a valid Instagram Reel URL" }
-  ),
+  ).optional(),
+  shortVideoUrl: z.string().url().refine(
+    (url) => {
+      const instagramPatterns = [
+        /^https?:\/\/(www\.)?instagram\.com\/reel\/[A-Za-z0-9_-]+\/?$/,
+        /^https?:\/\/(www\.)?instagram\.com\/reels\/[A-Za-z0-9_-]+\/?$/,
+        /^https?:\/\/(www\.)?instagram\.com\/p\/[A-Za-z0-9_-]+\/?$/,
+      ];
+      const youtubePatterns = [
+        /^https?:\/\/(www\.)?youtube\.com\/shorts\/[A-Za-z0-9_-]+$/,
+        /^https?:\/\/youtu\.be\/[A-Za-z0-9_-]+$/,
+      ];
+      return instagramPatterns.some(pattern => pattern.test(url)) || 
+             youtubePatterns.some(pattern => pattern.test(url));
+    },
+    { message: "Must be a valid Instagram Reel or YouTube Shorts URL" }
+  ).optional(),
   languageHint: z.string().optional(),
   cookieOptions: z.object({
     browserCookies: z.enum(['chrome', 'firefox', 'safari', 'edge', 'opera', 'brave']).optional(),
     cookiesFile: z.string().optional(),
   }).optional(),
+}).refine((data) => !!(data.instagramReelUrl || data.shortVideoUrl), {
+  message: "Provide either instagramReelUrl or shortVideoUrl",
+  path: ['input']
 });
 
 // Enhanced request validation schema
@@ -34,7 +53,23 @@ const EnhancedKeywordExtractionRequestSchema = z.object({
       return instagramPatterns.some(pattern => pattern.test(url));
     },
     { message: "Must be a valid Instagram Reel URL" }
-  ),
+  ).optional(),
+  shortVideoUrl: z.string().url().refine(
+    (url) => {
+      const instagramPatterns = [
+        /^https?:\/\/(www\.)?instagram\.com\/reel\/[A-Za-z0-9_-]+\/?$/,
+        /^https?:\/\/(www\.)?instagram\.com\/reels\/[A-Za-z0-9_-]+\/?$/,
+        /^https?:\/\/(www\.)?instagram\.com\/p\/[A-Za-z0-9_-]+\/?$/,
+      ];
+      const youtubePatterns = [
+        /^https?:\/\/(www\.)?youtube\.com\/shorts\/[A-Za-z0-9_-]+$/,
+        /^https?:\/\/youtu\.be\/[A-Za-z0-9_-]+$/,
+      ];
+      return instagramPatterns.some(pattern => pattern.test(url)) || 
+             youtubePatterns.some(pattern => pattern.test(url));
+    },
+    { message: "Must be a valid Instagram Reel or YouTube Shorts URL" }
+  ).optional(),
   languageHint: z.string().optional(),
   cookieOptions: z.object({
     browserCookies: z.enum(['chrome', 'firefox', 'safari', 'edge', 'opera', 'brave']).optional(),
@@ -47,6 +82,9 @@ const EnhancedKeywordExtractionRequestSchema = z.object({
     includeEntities: z.boolean().optional().default(true),
   }).optional(),
   async: z.boolean().optional().default(false),
+}).refine((data) => !!(data.instagramReelUrl || data.shortVideoUrl), {
+  message: "Provide either instagramReelUrl or shortVideoUrl",
+  path: ['input']
 });
 
 export const keywordRoutes = async (fastify: any) => {
@@ -63,7 +101,12 @@ export const keywordRoutes = async (fastify: any) => {
       }, 'Starting keyword extraction');
 
       // Extract keywords
-      const result = await extractKeywords(parsed);
+      const result = await extractKeywords({
+        instagramReelUrl: parsed.instagramReelUrl,
+        shortVideoUrl: parsed.shortVideoUrl,
+        languageHint: parsed.languageHint,
+        cookieOptions: parsed.cookieOptions,
+      });
       
       const duration = Date.now() - startTime;
       fastify.log.info({
@@ -117,7 +160,14 @@ export const keywordRoutes = async (fastify: any) => {
       }, 'Starting enhanced keyword extraction');
 
       // Extract enhanced keywords
-      const result = await extractKeywordsEnhanced(parsed);
+      const result = await extractKeywordsEnhanced({
+        instagramReelUrl: parsed.instagramReelUrl,
+        shortVideoUrl: parsed.shortVideoUrl,
+        languageHint: parsed.languageHint,
+        cookieOptions: parsed.cookieOptions,
+        options: parsed.options,
+        async: parsed.async,
+      });
       
       const duration = Date.now() - startTime;
       fastify.log.info({

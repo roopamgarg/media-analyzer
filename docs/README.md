@@ -8,7 +8,8 @@ Welcome to the Media Analyzer documentation! All project documentation is organi
 
 | Document | Description | Use When |
 |----------|-------------|----------|
-| [API Documentation](api-documentation.md) | Complete API reference with examples, authentication, endpoints | You need to understand or use the API |
+| [API Reference](api-reference.md) | **Complete reference for all 17 API endpoints** with detailed explanations, examples, and use cases | You need detailed information about any API endpoint |
+| [API Documentation](api-documentation.md) | Quick API reference with authentication, endpoints, and examples | You need a quick API overview |
 | [Keyword Extraction](keyword-extraction.md) | Detailed guide for keyword extraction features | Working with keyword extraction |
 | [NER Implementation](ner-implementation.md) | Named Entity Recognition implementation details | Understanding NER features |
 

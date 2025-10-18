@@ -35,6 +35,22 @@ export const CreateAnalysisRequest = z.object({
       },
       { message: "Must be a valid Instagram Reel URL" }
     ).optional(),
+    shortVideoUrl: z.string().url().refine(
+      (url) => {
+        const instagramPatterns = [
+          /^https?:\/\/(www\.)?instagram\.com\/reel\/[A-Za-z0-9_-]+\/?$/,
+          /^https?:\/\/(www\.)?instagram\.com\/reels\/[A-Za-z0-9_-]+\/?$/,
+          /^https?:\/\/(www\.)?instagram\.com\/p\/[A-Za-z0-9_-]+\/?$/,
+        ];
+        const youtubePatterns = [
+          /^https?:\/\/(www\.)?youtube\.com\/shorts\/[A-Za-z0-9_-]+$/,
+          /^https?:\/\/youtu\.be\/[A-Za-z0-9_-]+$/,
+        ];
+        return instagramPatterns.some(pattern => pattern.test(url)) || 
+               youtubePatterns.some(pattern => pattern.test(url));
+      },
+      { message: "Must be a valid Instagram Reel or YouTube Shorts URL" }
+    ).optional(),
     media: z.object({
       videoBase64: z.string().optional(),
       caption: z.string().nullish(),
@@ -55,8 +71,8 @@ export const CreateAnalysisRequest = z.object({
     }).optional()
   }).default({}),
   idempotencyKey: z.string().uuid().optional(),
-}).refine((v) => !!(v.input.url || v.input.instagramReelUrl || v.input.media), {
-  message: 'Provide input.url, input.instagramReelUrl, or input.media',
+}).refine((v) => !!(v.input.url || v.input.instagramReelUrl || v.input.shortVideoUrl || v.input.media), {
+  message: 'Provide input.url, input.instagramReelUrl, input.shortVideoUrl, or input.media',
   path: ['input']
 }).refine((v) => !!(v.brandKit.brandKitId || v.brandKit.inline), {
   message: 'Provide brandKitId or inline',

@@ -4,9 +4,11 @@ import { callWorkerASR } from './worker';
 import { runOCR } from './ocr';
 import { buildTimedDoc } from './nlp';
 import { config } from '../config';
+import { isValidShortVideoUrl } from './video-platform';
 
 export interface KeywordExtractionRequest {
-  instagramReelUrl: string;
+  instagramReelUrl?: string;
+  shortVideoUrl?: string;
   languageHint?: string;
   cookieOptions?: {
     browserCookies?: 'chrome' | 'firefox' | 'safari' | 'edge' | 'opera' | 'brave';
@@ -42,16 +44,29 @@ export interface KeywordExtractionResult {
 }
 
 /**
- * Extract keywords from an Instagram Reel for search purposes
+ * Extract keywords from a short video (Instagram Reel or YouTube Shorts) for search purposes
  */
 export async function extractKeywords(request: KeywordExtractionRequest): Promise<KeywordExtractionResult> {
   const startTime = Date.now();
   const timings: Record<string, number> = {};
 
   try {
-    // Validate Instagram URL
-    if (!isValidInstagramReelUrl(request.instagramReelUrl)) {
+    // Validate input - must have either instagramReelUrl or shortVideoUrl
+    if (!request.instagramReelUrl && !request.shortVideoUrl) {
+      throw new Error('Provide either instagramReelUrl or shortVideoUrl');
+    }
+    
+    if (request.instagramReelUrl && request.shortVideoUrl) {
+      throw new Error('Provide either instagramReelUrl or shortVideoUrl, not both');
+    }
+
+    // Validate URL format
+    if (request.instagramReelUrl && !isValidInstagramReelUrl(request.instagramReelUrl)) {
       throw new Error('Invalid Instagram Reel URL format');
+    }
+    
+    if (request.shortVideoUrl && !isValidShortVideoUrl(request.shortVideoUrl)) {
+      throw new Error('Invalid short video URL format');
     }
 
     // Step 1: Download and extract media
@@ -59,6 +74,7 @@ export async function extractKeywords(request: KeywordExtractionRequest): Promis
     const mediaData = await fetchAndExtract({
       input: {
         instagramReelUrl: request.instagramReelUrl,
+        shortVideoUrl: request.shortVideoUrl,
         media: {
           languageHint: request.languageHint,
         },

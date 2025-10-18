@@ -1,10 +1,10 @@
 # Keyword Extraction API
 
-A new API endpoint for extracting searchable keywords from Instagram Reels to enable better content discovery and search functionality.
+A new API endpoint for extracting searchable keywords from short videos (Instagram Reels and YouTube Shorts) to enable better content discovery and search functionality.
 
 ## 🚀 Overview
 
-The Keyword Extraction API analyzes Instagram Reels to extract:
+The Keyword Extraction API analyzes short videos to extract:
 - **Primary Keywords**: Most important terms for search
 - **Secondary Keywords**: Supporting terms and context
 - **Hashtags**: All hashtags from the caption
@@ -27,6 +27,7 @@ Authorization: Bearer <jwt-token>
 
 ## 📝 Request Body
 
+**Instagram Reel:**
 ```json
 {
   "instagramReelUrl": "https://www.instagram.com/reel/ABC123DEF456/",
@@ -38,15 +39,26 @@ Authorization: Bearer <jwt-token>
 }
 ```
 
+**YouTube Shorts:**
+```json
+{
+  "shortVideoUrl": "https://www.youtube.com/shorts/ABC123DEF456",
+  "languageHint": "en"
+}
+```
+
 ### Request Parameters
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `instagramReelUrl` | string | ✅ | Instagram Reel URL to analyze |
+| `instagramReelUrl` | string | ✅* | Instagram Reel URL to analyze |
+| `shortVideoUrl` | string | ✅* | Instagram Reel or YouTube Shorts URL to analyze |
 | `languageHint` | string | ❌ | Language hint for ASR (e.g., "en", "es", "fr") |
 | `cookieOptions` | object | ❌ | Cookie configuration for Instagram access |
 | `cookieOptions.browserCookies` | string | ❌ | Browser to extract cookies from ("chrome", "firefox", "safari", "edge", "opera", "brave") |
 | `cookieOptions.cookiesFile` | string | ❌ | Path to cookies.txt file |
+
+*Either `instagramReelUrl` or `shortVideoUrl` is required, but not both.
 
 ## 📊 Response Format
 
@@ -139,6 +151,7 @@ Authorization: Bearer <jwt-token>
 
 ### Using cURL
 
+**Instagram Reel:**
 ```bash
 curl -X POST http://localhost:3000/v1/keywords/extract \
   -H "Content-Type: application/json" \
@@ -149,6 +162,17 @@ curl -X POST http://localhost:3000/v1/keywords/extract \
     "cookieOptions": {
       "browserCookies": "chrome"
     }
+  }'
+```
+
+**YouTube Shorts:**
+```bash
+curl -X POST http://localhost:3000/v1/keywords/extract \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <your-jwt-token>" \
+  -d '{
+    "shortVideoUrl": "https://www.youtube.com/shorts/ABC123DEF456",
+    "languageHint": "en"
   }'
 ```
 
@@ -641,12 +665,30 @@ Enhanced endpoint uses the same error codes as the basic endpoint:
 
 ### Testing Enhanced Endpoint
 
+**Instagram Reel:**
 ```bash
 curl -X POST http://localhost:3000/v1/keywords/extract-enhanced \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <your-jwt-token>" \
   -d '{
     "instagramReelUrl": "https://www.instagram.com/reel/ABC123DEF456/",
+    "languageHint": "en",
+    "options": {
+      "includeNgrams": true,
+      "includeSentiment": true,
+      "includeIntent": true,
+      "includeEntities": true
+    }
+  }'
+```
+
+**YouTube Shorts:**
+```bash
+curl -X POST http://localhost:3000/v1/keywords/extract-enhanced \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <your-jwt-token>" \
+  -d '{
+    "shortVideoUrl": "https://www.youtube.com/shorts/ABC123DEF456",
     "languageHint": "en",
     "options": {
       "includeNgrams": true,
