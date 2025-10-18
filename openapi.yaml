@@ -866,6 +866,8 @@ components:
               format: uri
               pattern: '^https?://(www\.)?instagram\.com/(reel|reels|p)/[A-Za-z0-9_-]+/?$'
               example: https://www.instagram.com/reel/ABC123DEF456/
+              deprecated: true
+              description: "DEPRECATED: Use shortVideoUrl instead. This field will be removed in a future version."
             shortVideoUrl:
               type: string
               format: uri
@@ -1249,6 +1251,8 @@ components:
           format: uri
           pattern: '^https?://(www\.)?instagram\.com/(reel|reels|p)/[A-Za-z0-9_-]+/?$'
           example: https://www.instagram.com/reel/ABC123DEF456/
+          deprecated: true
+          description: "DEPRECATED: Use shortVideoUrl instead. This field will be removed in a future version."
         shortVideoUrl:
           type: string
           format: uri

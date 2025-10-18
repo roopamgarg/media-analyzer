@@ -14,7 +14,7 @@ const KeywordExtractionRequestSchema = z.object({
       return instagramPatterns.some(pattern => pattern.test(url));
     },
     { message: "Must be a valid Instagram Reel URL" }
-  ).optional(),
+  ).optional().describe("DEPRECATED: Use shortVideoUrl instead. This field will be removed in a future version."),
   shortVideoUrl: z.string().url().refine(
     (url) => {
       const instagramPatterns = [
@@ -53,7 +53,7 @@ const EnhancedKeywordExtractionRequestSchema = z.object({
       return instagramPatterns.some(pattern => pattern.test(url));
     },
     { message: "Must be a valid Instagram Reel URL" }
-  ).optional(),
+  ).optional().describe("DEPRECATED: Use shortVideoUrl instead. This field will be removed in a future version."),
   shortVideoUrl: z.string().url().refine(
     (url) => {
       const instagramPatterns = [

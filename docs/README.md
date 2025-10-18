@@ -2,6 +2,8 @@
 
 Welcome to the Media Analyzer documentation! All project documentation is organized here for easy access.
 
+> **⚠️ API Deprecation Notice:** The `instagramReelUrl` field is deprecated and will be removed in a future version. Please use `shortVideoUrl` instead, which supports both Instagram Reels and YouTube Shorts.
+
 ## 📚 Documentation Index
 
 ### Core Documentation

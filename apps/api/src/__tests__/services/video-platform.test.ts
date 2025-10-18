@@ -1,5 +1,8 @@
 import { isValidShortVideoUrl, isInstagramReel, isYouTubeShorts, extractYouTubeShortsId } from '../../services/video-platform';
 
+// Note: This test file covers the new shortVideoUrl functionality
+// The deprecated instagramReelUrl field is still supported for backward compatibility
+
 describe('Video Platform Service', () => {
   describe('isValidShortVideoUrl', () => {
     it('should validate Instagram Reel URLs', () => {

@@ -2,6 +2,8 @@
 
 A new API endpoint for extracting searchable keywords from short videos (Instagram Reels and YouTube Shorts) to enable better content discovery and search functionality.
 
+> **⚠️ Deprecation Notice:** The `instagramReelUrl` field is deprecated and will be removed in a future version. Please use `shortVideoUrl` instead, which supports both Instagram Reels and YouTube Shorts.
+
 ## 🚀 Overview
 
 The Keyword Extraction API analyzes short videos to extract:
@@ -51,7 +53,7 @@ Authorization: Bearer <jwt-token>
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `instagramReelUrl` | string | ✅* | Instagram Reel URL to analyze |
+| `instagramReelUrl` | string | ✅* | **DEPRECATED** - Instagram Reel URL to analyze (use `shortVideoUrl` instead) |
 | `shortVideoUrl` | string | ✅* | Instagram Reel or YouTube Shorts URL to analyze |
 | `languageHint` | string | ❌ | Language hint for ASR (e.g., "en", "es", "fr") |
 | `cookieOptions` | object | ❌ | Cookie configuration for Instagram access |

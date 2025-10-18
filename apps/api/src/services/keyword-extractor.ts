@@ -7,6 +7,7 @@ import { config } from '../config';
 import { isValidShortVideoUrl } from './video-platform';
 
 export interface KeywordExtractionRequest {
+  /** @deprecated Use shortVideoUrl instead. This field will be removed in a future version. */
   instagramReelUrl?: string;
   shortVideoUrl?: string;
   languageHint?: string;

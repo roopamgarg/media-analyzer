@@ -2,6 +2,8 @@
 
 A comprehensive media analysis platform for brand-fit and compliance checking with explainable flags and evidence.
 
+> **⚠️ API Deprecation Notice:** The `instagramReelUrl` field is deprecated and will be removed in a future version. Please use `shortVideoUrl` instead, which supports both Instagram Reels and YouTube Shorts.
+
 ## Architecture
 
 This is a monorepo containing:

@@ -43,6 +43,7 @@ export function extractReelId(url: string): string | null {
  * 3. Rate limiting and error handling
  * 4. Legal compliance with Instagram's ToS
  */
+/** @deprecated Use downloadShortVideo from video-platform service instead. This function will be removed in a future version. */
 export async function downloadInstagramReel(reelUrl: string, browserCookies?: string, cookiesFile?: string): Promise<{
   videoPath: string;
   caption?: string;
@@ -245,6 +246,7 @@ async function downloadInstagramVideo(reelUrl: string, outputPath: string, brows
 /**
  * Validate Instagram Reel URL format
  */
+/** @deprecated Use isValidShortVideoUrl from video-platform service instead. This function will be removed in a future version. */
 export function isValidInstagramReelUrl(url: string): boolean {
   const instagramPatterns = [
     /^https?:\/\/(www\.)?instagram\.com\/reel\/[A-Za-z0-9_-]+\/?$/,

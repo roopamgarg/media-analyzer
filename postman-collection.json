@@ -129,7 +129,7 @@
       }
     },
     {
-      "name": "Analyze Instagram Reel (Basic)",
+      "name": "Analyze Instagram Reel (Basic) [DEPRECATED]",
       "request": {
         "method": "POST",
         "header": [
@@ -477,7 +477,7 @@
       }
     },
     {
-      "name": "Extract Keywords (Basic)",
+      "name": "Extract Keywords (Basic) [DEPRECATED - uses instagramReelUrl]",
       "request": {
         "method": "POST",
         "header": [
@@ -585,7 +585,7 @@
       }
     },
     {
-      "name": "Extract Enhanced Keywords (Basic)",
+      "name": "Extract Enhanced Keywords (Basic) [DEPRECATED - uses instagramReelUrl]",
       "request": {
         "method": "POST",
         "header": [
@@ -805,7 +805,8 @@
     },
     {
       "key": "instagram_reel_url",
-      "value": "https://www.instagram.com/reels/DO3i-MviVuG/"
+      "value": "https://www.instagram.com/reels/DO3i-MviVuG/",
+      "description": "DEPRECATED: Use shortVideoUrl instead"
     },
     {
       "key": "youtube_shorts_url",

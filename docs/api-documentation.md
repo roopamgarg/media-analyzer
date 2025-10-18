@@ -1,6 +1,6 @@
 # Media Analyzer API - Complete Reference
 
-Comprehensive reference guide for all Media Analyzer API endpoints with detailed explanations, examples, and use cases.
+Comprehensive reference guide for all Media Analyzer API endpoints with detailed explanations, examples, and use cases. Supports analysis of Instagram Reels, YouTube Shorts, and direct video URLs.
 
 ## Table of Contents
 
@@ -363,7 +363,9 @@ curl http://localhost:3000/health/config
 
 ### 8. POST /v1/analyze
 
-**Purpose:** Analyze Instagram Reel or video for brand compliance and content quality.
+**Purpose:** Analyze Instagram Reel, YouTube Shorts, or video for brand compliance and content quality.
+
+> **⚠️ Deprecation Notice:** The `instagramReelUrl` field is deprecated and will be removed in a future version. Please use `shortVideoUrl` instead, which supports both Instagram Reels and YouTube Shorts.
 
 **Authentication:** Required
 
@@ -376,6 +378,7 @@ curl http://localhost:3000/health/config
 {
   "input": {
     "instagramReelUrl": "https://www.instagram.com/reel/ABC123/",
+    "shortVideoUrl": "https://www.youtube.com/shorts/ABC123DEF456",
     "url": "https://example.com/video.mp4",
     "s3Key": "videos/sample.mp4"
   },
@@ -491,11 +494,12 @@ curl http://localhost:3000/health/config
 ```
 
 **Use Cases:**
-- **Influencer Marketing:** Verify influencer content meets brand guidelines
+- **Influencer Marketing:** Verify influencer content meets brand guidelines (Instagram Reels, YouTube Shorts)
 - **Compliance:** Check for required disclosures (#ad, #sponsored)
 - **Brand Safety:** Detect competitor mentions, inappropriate content
 - **Quality Control:** Ensure content matches brand tone and values
 - **Legal Review:** Identify health claims, financial claims, disclaimers
+- **Multi-Platform Analysis:** Analyze content across Instagram and YouTube platforms
 
 **Example - Instagram Reel:**
 ```bash
@@ -525,6 +529,35 @@ curl -X POST http://localhost:3000/v1/analyze \
       "cookieOptions": {
         "browserCookies": "chrome"
       }
+    }
+  }'
+```
+
+**Example - YouTube Shorts:**
+```bash
+curl -X POST http://localhost:3000/v1/analyze \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "input": {
+      "shortVideoUrl": "https://www.youtube.com/shorts/ABC123DEF456"
+    },
+    "brandKit": {
+      "inline": {
+        "brandName": "TechBrand",
+        "category": "Technology",
+        "palette": ["#0066CC"],
+        "doDonts": {
+          "do": ["Show features clearly", "Professional presentation"],
+          "dont": ["False claims", "Competitor mentions"]
+        }
+      }
+    },
+    "category": "Technology",
+    "options": {
+      "enableOCR": true,
+      "enableASR": true,
+      "languageHint": "en"
     }
   }'
 ```
@@ -637,11 +670,13 @@ curl http://localhost:3000/v1/analyses/$ANALYSIS_ID \
 
 ### 10. POST /v1/keywords/extract
 
-**Purpose:** Extract keywords, hashtags, and topics from Instagram Reels (basic version).
+**Purpose:** Extract keywords, hashtags, and topics from Instagram Reels and YouTube Shorts (basic version).
+
+> **⚠️ Deprecation Notice:** The `instagramReelUrl` field is deprecated and will be removed in a future version. Please use `shortVideoUrl` instead, which supports both Instagram Reels and YouTube Shorts.
 
 **Authentication:** Required
 
-**Request Body:**
+**Request Body (Instagram Reel):**
 ```json
 {
   "instagramReelUrl": "https://www.instagram.com/reel/ABC123/",
@@ -650,6 +685,14 @@ curl http://localhost:3000/v1/analyses/$ANALYSIS_ID \
     "browserCookies": "chrome",
     "cookiesFile": "/path/to/cookies.txt"
   }
+}
+```
+
+**Request Body (YouTube Shorts):**
+```json
+{
+  "shortVideoUrl": "https://www.youtube.com/shorts/ABC123DEF456",
+  "languageHint": "en"
 }
 ```
 
@@ -687,13 +730,14 @@ curl http://localhost:3000/v1/analyses/$ANALYSIS_ID \
 ```
 
 **Use Cases:**
-- **Content Discovery:** Make videos searchable by keywords
+- **Content Discovery:** Make videos searchable by keywords (Instagram Reels, YouTube Shorts)
 - **SEO Optimization:** Generate search-friendly terms
 - **Hashtag Research:** Discover relevant hashtags
 - **Topic Classification:** Categorize content automatically
 - **Search Indexing:** Build searchable content databases
+- **Multi-Platform SEO:** Extract keywords from both Instagram and YouTube content
 
-**Example:**
+**Example - Instagram Reel:**
 ```bash
 curl -X POST http://localhost:3000/v1/keywords/extract \
   -H "Authorization: Bearer <token>" \
@@ -707,15 +751,28 @@ curl -X POST http://localhost:3000/v1/keywords/extract \
   }'
 ```
 
+**Example - YouTube Shorts:**
+```bash
+curl -X POST http://localhost:3000/v1/keywords/extract \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "shortVideoUrl": "https://www.youtube.com/shorts/ABC123DEF456",
+    "languageHint": "en"
+  }'
+```
+
 ---
 
 ### 11. POST /v1/keywords/extract-enhanced
 
-**Purpose:** Advanced keyword extraction with NLP features (sentiment, intent, entities, n-grams).
+**Purpose:** Advanced keyword extraction with NLP features (sentiment, intent, entities, n-grams) for Instagram Reels and YouTube Shorts.
+
+> **⚠️ Deprecation Notice:** The `instagramReelUrl` field is deprecated and will be removed in a future version. Please use `shortVideoUrl` instead, which supports both Instagram Reels and YouTube Shorts.
 
 **Authentication:** Required
 
-**Request Body:**
+**Request Body (Instagram Reel):**
 ```json
 {
   "instagramReelUrl": "https://www.instagram.com/reel/ABC123/",
@@ -728,6 +785,20 @@ curl -X POST http://localhost:3000/v1/keywords/extract \
   },
   "cookieOptions": {
     "browserCookies": "chrome"
+  }
+}
+```
+
+**Request Body (YouTube Shorts):**
+```json
+{
+  "shortVideoUrl": "https://www.youtube.com/shorts/ABC123DEF456",
+  "languageHint": "en",
+  "options": {
+    "includeNgrams": true,
+    "includeSentiment": true,
+    "includeIntent": true,
+    "includeEntities": true
   }
 }
 ```
@@ -829,15 +900,16 @@ curl -X POST http://localhost:3000/v1/keywords/extract \
 ```
 
 **Use Cases:**
-- **Content Recommendation:** Understand content semantically for better matching
+- **Content Recommendation:** Understand content semantically for better matching (Instagram Reels, YouTube Shorts)
 - **Sentiment Analysis:** Filter content by emotional tone
 - **Intent Detection:** Route content based on purpose (educate, promote, entertain)
 - **Entity Extraction:** Identify brands, products, people mentioned
 - **Advanced Search:** Semantic search with phrase understanding
 - **Content Moderation:** Detect inappropriate sentiment or intent
 - **LLM Training:** Generate rich training data for AI models
+- **Cross-Platform Analysis:** Compare sentiment and intent across Instagram and YouTube
 
-**Example:**
+**Example - Instagram Reel:**
 ```bash
 curl -X POST http://localhost:3000/v1/keywords/extract-enhanced \
   -H "Authorization: Bearer <token>" \
@@ -853,6 +925,23 @@ curl -X POST http://localhost:3000/v1/keywords/extract-enhanced \
     },
     "cookieOptions": {
       "browserCookies": "chrome"
+    }
+  }'
+```
+
+**Example - YouTube Shorts:**
+```bash
+curl -X POST http://localhost:3000/v1/keywords/extract-enhanced \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "shortVideoUrl": "https://www.youtube.com/shorts/ABC123DEF456",
+    "languageHint": "en",
+    "options": {
+      "includeNgrams": true,
+      "includeSentiment": true,
+      "includeIntent": true,
+      "includeEntities": true
     }
   }'
 ```
@@ -1051,9 +1140,68 @@ curl -X POST http://localhost:8000/download-instagram \
 
 ---
 
+### 16. POST /download-short-video
+
+**Purpose:** Download Instagram Reels and YouTube Shorts with metadata extraction.
+
+**Authentication:** Not required (internal service)
+
+**Request Body:**
+```json
+{
+  "url": "https://www.youtube.com/shorts/ABC123DEF456",
+  "browser_cookies": "chrome",
+  "cookies_file": "/path/to/cookies.txt"
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "video_path": "/tmp/youtube_shorts_ABC123DEF456.mp4",
+  "caption": "Amazing tech review! #technology #gadgets",
+  "username": "techreviewer",
+  "duration": 45.2,
+  "view_count": 250000,
+  "like_count": 12500,
+  "upload_date": "20240115",
+  "thumbnail": "/tmp/youtube_shorts_ABC123DEF456_thumb.jpg",
+  "webpage_url": "https://www.youtube.com/shorts/ABC123DEF456",
+  "error": null
+}
+```
+
+**Use Cases:**
+- Download YouTube Shorts content for analysis
+- Download Instagram Reels via unified endpoint
+- Extract metadata for reporting
+- Content archival
+
+**Example - YouTube Shorts:**
+```bash
+curl -X POST http://localhost:8000/download-short-video \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://www.youtube.com/shorts/ABC123DEF456"
+  }'
+```
+
+**Example - Instagram Reel:**
+```bash
+curl -X POST http://localhost:8000/download-short-video \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://www.instagram.com/reel/ABC123/",
+    "browser_cookies": "chrome"
+  }'
+```
+
+---
+
 ## Python Worker - NLP
 
-### 16. POST /ner
+### 17. POST /ner
 
 **Purpose:** Named Entity Recognition - extract entities (people, brands, locations, etc.) from text.
 
@@ -1159,7 +1307,7 @@ curl -X POST http://localhost:8000/ner \
 
 ---
 
-### 17. POST /semantic-similarity
+### 18. POST /semantic-similarity
 
 **Purpose:** Compute semantic similarity and cluster keywords.
 
